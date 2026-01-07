@@ -209,6 +209,70 @@ export const optionsApi = {
     );
     return response.data;
   },
+  // Admin endpoints
+  list: async (params?: {
+    category?: string;
+    search?: string;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const response = await api.get<ApiResponse<any>>("/api/admin/options", {
+      params,
+    });
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await api.get<ApiResponse<any>>(
+      `/api/admin/options/${id}`
+    );
+    return response.data;
+  },
+  create: async (data: {
+    type: string;
+    code: string;
+    translations: { es: string; en: string; pt: string };
+    isActive?: boolean;
+    order?: number;
+  }) => {
+    const response = await api.post<ApiResponse<any>>(
+      "/api/admin/options",
+      data
+    );
+    return response.data;
+  },
+  update: async (
+    id: string,
+    data: {
+      translations?: { es?: string; en?: string; pt?: string };
+      isActive?: boolean;
+      order?: number;
+    }
+  ) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/options/${id}`,
+      data
+    );
+    return response.data;
+  },
+  toggleActive: async (id: string) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/options/${id}/activate`
+    );
+    return response.data;
+  },
+  reorder: async (items: { id: string; order: number }[]) => {
+    const response = await api.patch<ApiResponse<any>>(
+      "/api/admin/options/reorder",
+      { items }
+    );
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete<ApiResponse<any>>(
+      `/api/admin/options/${id}`
+    );
+    return response.data;
+  },
 };
 
 // Terms API
