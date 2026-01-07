@@ -32,7 +32,21 @@ import {
   X,
 } from "lucide-react";
 
-type CatalogType = "JOB_AREA" | "JOB_TYPE" | "JOB_LEVEL";
+type CatalogType =
+  | "JOB_AREA"
+  | "JOB_TYPE"
+  | "JOB_LEVEL"
+  | "JOB_TYPES"
+  | "EXPERIENCE_LEVELS"
+  | "APPLICATION_STATUSES"
+  | "MODALITIES"
+  | "LANGUAGE_LEVELS"
+  | "COMPANY_SIZES"
+  | "SECTORS"
+  | "STUDY_TYPES"
+  | "STUDY_STATUSES"
+  | "MARITAL_STATUSES";
+
 
 interface Catalog {
   id: string;
@@ -211,10 +225,20 @@ export default function CatalogsPage() {
         setPage(1);
         setSearch("");
       }}>
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="JOB_AREA">Áreas</TabsTrigger>
           <TabsTrigger value="JOB_TYPE">Tipos</TabsTrigger>
           <TabsTrigger value="JOB_LEVEL">Niveles</TabsTrigger>
+          <TabsTrigger value="JOB_TYPES">Tipos de Trabajo</TabsTrigger>
+          <TabsTrigger value="EXPERIENCE_LEVELS">Niveles de Experiencia</TabsTrigger>
+          <TabsTrigger value="APPLICATION_STATUSES">Estados de Aplicación</TabsTrigger>
+          <TabsTrigger value="MODALITIES">Modalidades</TabsTrigger>
+          <TabsTrigger value="LANGUAGE_LEVELS">Niveles de Idioma</TabsTrigger>
+          <TabsTrigger value="COMPANY_SIZES">Tamaños de Empresa</TabsTrigger>
+          <TabsTrigger value="SECTORS">Sectores</TabsTrigger>
+          <TabsTrigger value="STUDY_TYPES">Tipos de Estudio</TabsTrigger>
+          <TabsTrigger value="STUDY_STATUSES">Estados de Estudio</TabsTrigger>
+          <TabsTrigger value="MARITAL_STATUSES">Estados Civiles</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">

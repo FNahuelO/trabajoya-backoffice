@@ -9,7 +9,6 @@ import {
   Building2,
   FileText,
   CreditCard,
-  Settings,
   FileCheck,
   Menu,
   X,
@@ -34,9 +33,8 @@ const menuItems = [
   { path: "/subscriptions", icon: CreditCard, label: "Suscripciones" },
   { path: "/messages", icon: MessageSquare, label: "Mensajes" },
   { path: "/calls", icon: Phone, label: "Llamadas" },
-  { path: "/options", icon: Settings, label: "Opciones" },
   { path: "/terms", icon: FileCheck, label: "Términos y Condiciones" },
-  { path: "/catalogs", icon: BookOpen, label: "Catálogos" },
+  { path: "/catalogs", icon: BookOpen, label: "Catálogos y Opciones" },
 ];
 
 export default function Layout({ children }: LayoutProps) {

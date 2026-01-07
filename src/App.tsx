@@ -11,7 +11,6 @@ import EmpresasPage from "./pages/EmpresasPage";
 import PostulantesPage from "./pages/PostulantesPage";
 import ApplicationsPage from "./pages/ApplicationsPage";
 import SubscriptionsPage from "./pages/SubscriptionsPage";
-import OptionsPage from "./pages/OptionsPage";
 import TermsPage from "./pages/TermsPage";
 import MessagesPage from "./pages/MessagesPage";
 import CallsPage from "./pages/CallsPage";
@@ -62,7 +61,7 @@ function AppRoutes() {
                 <Route path="/subscriptions" element={<SubscriptionsPage />} />
                 <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/calls" element={<CallsPage />} />
-                <Route path="/options" element={<OptionsPage />} />
+                <Route path="/options" element={<Navigate to="/catalogs" replace />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/catalogs" element={<CatalogsPage />} />
               </Routes>

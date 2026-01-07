@@ -1,8 +1,7 @@
 import axios from "axios";
 import type { ApiResponse } from "../types";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -324,7 +323,20 @@ export const catalogsApi = {
     return response.data;
   },
   list: async (params?: {
-    type?: "JOB_AREA" | "JOB_TYPE" | "JOB_LEVEL";
+    type?:
+      | "JOB_AREA"
+      | "JOB_TYPE"
+      | "JOB_LEVEL"
+      | "JOB_TYPES"
+      | "EXPERIENCE_LEVELS"
+      | "APPLICATION_STATUSES"
+      | "MODALITIES"
+      | "LANGUAGE_LEVELS"
+      | "COMPANY_SIZES"
+      | "SECTORS"
+      | "STUDY_TYPES"
+      | "STUDY_STATUSES"
+      | "MARITAL_STATUSES";
     search?: string;
     page?: number;
     pageSize?: number;
@@ -341,7 +353,20 @@ export const catalogsApi = {
     return response.data;
   },
   create: async (data: {
-    type: "JOB_AREA" | "JOB_TYPE" | "JOB_LEVEL";
+    type:
+      | "JOB_AREA"
+      | "JOB_TYPE"
+      | "JOB_LEVEL"
+      | "JOB_TYPES"
+      | "EXPERIENCE_LEVELS"
+      | "APPLICATION_STATUSES"
+      | "MODALITIES"
+      | "LANGUAGE_LEVELS"
+      | "COMPANY_SIZES"
+      | "SECTORS"
+      | "STUDY_TYPES"
+      | "STUDY_STATUSES"
+      | "MARITAL_STATUSES";
     code: string;
     translations: { es: string; en: string; pt: string };
     isActive?: boolean;
