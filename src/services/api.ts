@@ -413,6 +413,91 @@ export const catalogsApi = {
   },
 };
 
+// Plans API
+export const plansApi = {
+  list: async (params?: {
+    search?: string;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const response = await api.get<ApiResponse<any>>("/api/admin/plans", {
+      params,
+    });
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await api.get<ApiResponse<any>>(
+      `/api/admin/plans/${id}`
+    );
+    return response.data;
+  },
+  create: async (data: {
+    name: string;
+    code: string;
+    price: number;
+    durationDays: number;
+    unlimitedCvs?: boolean;
+    allowedModifications?: number;
+    canModifyCategory?: boolean;
+    categoryModifications?: number;
+    hasFeaturedOption?: boolean;
+    launchBenefitAvailable?: boolean;
+    launchBenefitDuration?: number | null;
+    isActive?: boolean;
+    order?: number;
+    description?: string;
+  }) => {
+    const response = await api.post<ApiResponse<any>>(
+      "/api/admin/plans",
+      data
+    );
+    return response.data;
+  },
+  update: async (
+    id: string,
+    data: {
+      name?: string;
+      price?: number;
+      durationDays?: number;
+      unlimitedCvs?: boolean;
+      allowedModifications?: number;
+      canModifyCategory?: boolean;
+      categoryModifications?: number;
+      hasFeaturedOption?: boolean;
+      launchBenefitAvailable?: boolean;
+      launchBenefitDuration?: number | null;
+      isActive?: boolean;
+      order?: number;
+      description?: string;
+    }
+  ) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/plans/${id}`,
+      data
+    );
+    return response.data;
+  },
+  toggleActive: async (id: string) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/plans/${id}/activate`
+    );
+    return response.data;
+  },
+  reorder: async (items: { id: string; order: number }[]) => {
+    const response = await api.patch<ApiResponse<any>>(
+      "/api/admin/plans/reorder",
+      { items }
+    );
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete<ApiResponse<any>>(
+      `/api/admin/plans/${id}`
+    );
+    return response.data;
+  },
+};
+
 // Helper para obtener todos los usuarios usando Prisma directamente
 // Por ahora, vamos a crear servicios básicos que funcionen con lo disponible
 export default api;

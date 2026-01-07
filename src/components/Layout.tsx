@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Phone,
   BookOpen,
+  Package,
 } from "lucide-react";
 
 interface LayoutProps {
@@ -35,6 +36,7 @@ const menuItems = [
   { path: "/calls", icon: Phone, label: "Llamadas" },
   { path: "/terms", icon: FileCheck, label: "Términos y Condiciones" },
   { path: "/catalogs", icon: BookOpen, label: "Catálogos y Opciones" },
+  { path: "/plans", icon: Package, label: "Planes" },
 ];
 
 export default function Layout({ children }: LayoutProps) {
