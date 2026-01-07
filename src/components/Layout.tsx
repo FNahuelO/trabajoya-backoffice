@@ -13,8 +13,6 @@ import {
   Menu,
   X,
   LogOut,
-  MessageSquare,
-  Phone,
   BookOpen,
   Package,
 } from "lucide-react";
