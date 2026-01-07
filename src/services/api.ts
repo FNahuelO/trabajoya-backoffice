@@ -251,6 +251,79 @@ export const termsApi = {
   },
 };
 
+// Catalogs API
+export const catalogsApi = {
+  getPublic: async (lang?: "es" | "en" | "pt") => {
+    const response = await api.get<ApiResponse<any>>("/api/catalogs", {
+      params: { lang: lang || "es" },
+    });
+    return response.data;
+  },
+  list: async (params?: {
+    type?: "JOB_AREA" | "JOB_TYPE" | "JOB_LEVEL";
+    search?: string;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const response = await api.get<ApiResponse<any>>("/api/admin/catalogs", {
+      params,
+    });
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await api.get<ApiResponse<any>>(
+      `/api/admin/catalogs/${id}`
+    );
+    return response.data;
+  },
+  create: async (data: {
+    type: "JOB_AREA" | "JOB_TYPE" | "JOB_LEVEL";
+    code: string;
+    translations: { es: string; en: string; pt: string };
+    isActive?: boolean;
+    order?: number;
+  }) => {
+    const response = await api.post<ApiResponse<any>>(
+      "/api/admin/catalogs",
+      data
+    );
+    return response.data;
+  },
+  update: async (
+    id: string,
+    data: {
+      translations?: { es?: string; en?: string; pt?: string };
+      isActive?: boolean;
+      order?: number;
+    }
+  ) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/catalogs/${id}`,
+      data
+    );
+    return response.data;
+  },
+  toggleActive: async (id: string) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/catalogs/${id}/activate`
+    );
+    return response.data;
+  },
+  reorder: async (items: { id: string; order: number }[]) => {
+    const response = await api.patch<ApiResponse<any>>(
+      "/api/admin/catalogs/reorder",
+      { items }
+    );
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete<ApiResponse<any>>(
+      `/api/admin/catalogs/${id}`
+    );
+    return response.data;
+  },
+};
+
 // Helper para obtener todos los usuarios usando Prisma directamente
 // Por ahora, vamos a crear servicios básicos que funcionen con lo disponible
 export default api;

@@ -15,6 +15,7 @@ import OptionsPage from "./pages/OptionsPage";
 import TermsPage from "./pages/TermsPage";
 import MessagesPage from "./pages/MessagesPage";
 import CallsPage from "./pages/CallsPage";
+import CatalogsPage from "./pages/CatalogsPage";
 // Public pages
 import DeleteAccountPage from "./pages/public/DeleteAccountPage";
 import PrivacyPolicyPage from "./pages/public/PrivacyPolicyPage";
@@ -63,6 +64,7 @@ function AppRoutes() {
                 <Route path="/calls" element={<CallsPage />} />
                 <Route path="/options" element={<OptionsPage />} />
                 <Route path="/terms" element={<TermsPage />} />
+                <Route path="/catalogs" element={<CatalogsPage />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
