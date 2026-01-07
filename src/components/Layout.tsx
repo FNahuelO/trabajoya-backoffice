@@ -32,8 +32,6 @@ const menuItems = [
   { path: "/postulantes", icon: Users, label: "Postulantes" },
   { path: "/applications", icon: FileText, label: "Aplicaciones" },
   { path: "/subscriptions", icon: CreditCard, label: "Suscripciones" },
-  { path: "/messages", icon: MessageSquare, label: "Mensajes" },
-  { path: "/calls", icon: Phone, label: "Llamadas" },
   { path: "/terms", icon: FileCheck, label: "Términos y Condiciones" },
   { path: "/catalogs", icon: BookOpen, label: "Catálogos y Opciones" },
   { path: "/plans", icon: Package, label: "Planes" },
