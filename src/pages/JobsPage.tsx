@@ -1,24 +1,18 @@
 import { useEffect, useState } from "react";
-import { adminApi, moderationApi } from "../services/api";
+import { adminApi } from "../services/api";
 import { useAlert } from "../hooks/useAlert";
 import DataTable from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import { format } from "date-fns";
-import { CheckCircle, XCircle } from "lucide-react";
 import type { Job } from "../types";
 
 export default function JobsPage() {
-  const { showAlert, showConfirm, AlertComponent } = useAlert();
-  const [rejectReason, setRejectReason] = useState("");
-  const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [jobToReject, setJobToReject] = useState<string | null>(null);
+  const { AlertComponent } = useAlert();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
-  // Por defecto, solo mostrar trabajos aprobados
-  const [moderationStatus] = useState<string>("APPROVED");
 
   useEffect(() => {
     loadJobs();
@@ -40,54 +34,6 @@ export default function JobsPage() {
       console.error("Error cargando trabajos:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleApprove = async (id: string) => {
-    showConfirm({
-      title: "Confirmar aprobación",
-      message: "¿Estás seguro de aprobar este trabajo?",
-      confirmText: "Aprobar",
-      cancelText: "Cancelar",
-      onConfirm: async () => {
-        try {
-          await moderationApi.approveJob(id);
-          loadJobs();
-        } catch (error) {
-          showAlert({
-            title: "Error",
-            message: "Error al aprobar el trabajo",
-          });
-        }
-      },
-    });
-  };
-
-  const handleReject = async (id: string) => {
-    setJobToReject(id);
-    setRejectReason("");
-    setShowRejectDialog(true);
-  };
-
-  const confirmReject = async () => {
-    if (!jobToReject || !rejectReason.trim()) {
-      showAlert({
-        title: "Campo requerido",
-        message: "Por favor ingresa una razón para el rechazo",
-      });
-      return;
-    }
-    try {
-      await moderationApi.rejectJob(jobToReject, rejectReason);
-      setShowRejectDialog(false);
-      setJobToReject(null);
-      setRejectReason("");
-      loadJobs();
-    } catch (error) {
-      showAlert({
-        title: "Error",
-        message: "Error al rechazar el trabajo",
-      });
     }
   };
 
@@ -212,7 +158,7 @@ export default function JobsPage() {
     {
       key: "actions",
       header: "Acciones",
-      render: (job: Job) => (
+      render: () => (
         <div className="flex space-x-2">
           {/* Los trabajos aprobados no tienen acciones de moderación */}
           {/* Las acciones de aprobar/rechazar están en PendingJobsPage */}
@@ -226,8 +172,12 @@ export default function JobsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Trabajos Aprobados</h1>
         <div className="text-sm text-gray-600">
-          Solo se muestran trabajos aprobados. Para moderar trabajos pendientes, ve a{" "}
-          <a href="/jobs/pending" className="text-blue-600 hover:text-blue-800 underline">
+          Solo se muestran trabajos aprobados. Para moderar trabajos pendientes,
+          ve a{" "}
+          <a
+            href="/jobs/pending"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
             Trabajos Pendientes
           </a>
         </div>
@@ -242,42 +192,6 @@ export default function JobsPage() {
             total={total}
             onPageChange={setPage}
           />
-        </div>
-      )}
-
-      {/* Dialog para razón de rechazo */}
-      {showRejectDialog && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Razón del rechazo
-            </h2>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mb-4"
-              rows={4}
-              placeholder="Ingresa la razón del rechazo..."
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowRejectDialog(false);
-                  setJobToReject(null);
-                  setRejectReason("");
-                }}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmReject}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Rechazar
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
