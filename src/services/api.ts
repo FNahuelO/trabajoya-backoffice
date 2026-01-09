@@ -442,6 +442,7 @@ export const plansApi = {
     canModifyCategory?: boolean;
     categoryModifications?: number;
     hasFeaturedOption?: boolean;
+    hasAIFeature?: boolean;
     launchBenefitAvailable?: boolean;
     launchBenefitDuration?: number | null;
     isActive?: boolean;
@@ -466,6 +467,7 @@ export const plansApi = {
       canModifyCategory?: boolean;
       categoryModifications?: number;
       hasFeaturedOption?: boolean;
+      hasAIFeature?: boolean;
       launchBenefitAvailable?: boolean;
       launchBenefitDuration?: number | null;
       isActive?: boolean;

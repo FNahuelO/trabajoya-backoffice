@@ -44,6 +44,7 @@ interface Plan {
   canModifyCategory: boolean;
   categoryModifications: number;
   hasFeaturedOption: boolean;
+  hasAIFeature: boolean;
   launchBenefitAvailable: boolean;
   launchBenefitDuration: number | null;
   isActive: boolean;
@@ -64,6 +65,7 @@ interface PlanFormData {
   canModifyCategory: boolean;
   categoryModifications: number;
   hasFeaturedOption: boolean;
+  hasAIFeature: boolean;
   launchBenefitAvailable: boolean;
   launchBenefitDuration: number | null;
   isActive: boolean;
@@ -90,6 +92,7 @@ export default function PlansPage() {
     canModifyCategory: false,
     categoryModifications: 0,
     hasFeaturedOption: false,
+    hasAIFeature: false,
     launchBenefitAvailable: false,
     launchBenefitDuration: null,
     isActive: true,
@@ -132,6 +135,7 @@ export default function PlansPage() {
       canModifyCategory: false,
       categoryModifications: 0,
       hasFeaturedOption: false,
+      hasAIFeature: false,
       launchBenefitAvailable: false,
       launchBenefitDuration: null,
       isActive: true,
@@ -153,6 +157,7 @@ export default function PlansPage() {
       canModifyCategory: plan.canModifyCategory,
       categoryModifications: plan.categoryModifications,
       hasFeaturedOption: plan.hasFeaturedOption,
+      hasAIFeature: plan.hasAIFeature || false,
       launchBenefitAvailable: plan.launchBenefitAvailable,
       launchBenefitDuration: plan.launchBenefitDuration,
       isActive: plan.isActive,
@@ -164,7 +169,7 @@ export default function PlansPage() {
   const handleSave = async () => {
     try {
       if (editingPlan) {
-        await plansApi.update(editingPlan.id, {
+        const response = await plansApi.update(editingPlan.id, {
           name: formData.name,
           price: formData.price,
           currency: formData.currency,
@@ -174,13 +179,20 @@ export default function PlansPage() {
           canModifyCategory: formData.canModifyCategory,
           categoryModifications: formData.categoryModifications,
           hasFeaturedOption: formData.hasFeaturedOption,
+          hasAIFeature: formData.hasAIFeature,
           launchBenefitAvailable: formData.launchBenefitAvailable,
           launchBenefitDuration: formData.launchBenefitDuration,
           isActive: formData.isActive,
           description: formData.description || undefined,
         });
+        setIsDialogOpen(false);
+        showAlert({
+          title: "Éxito",
+          message: response?.message || "Plan actualizado correctamente",
+        });
+        loadPlans();
       } else {
-        await plansApi.create({
+        const response = await plansApi.create({
           name: formData.name,
           code: formData.code,
           price: formData.price,
@@ -191,14 +203,19 @@ export default function PlansPage() {
           canModifyCategory: formData.canModifyCategory,
           categoryModifications: formData.categoryModifications,
           hasFeaturedOption: formData.hasFeaturedOption,
+          hasAIFeature: formData.hasAIFeature,
           launchBenefitAvailable: formData.launchBenefitAvailable,
           launchBenefitDuration: formData.launchBenefitDuration,
           isActive: formData.isActive,
           description: formData.description || undefined,
         });
+        setIsDialogOpen(false);
+        showAlert({
+          title: "Éxito",
+          message: response?.message || "Plan creado correctamente",
+        });
+        loadPlans();
       }
-      setIsDialogOpen(false);
-      loadPlans();
     } catch (error: any) {
       showAlert({
         title: "Error",
@@ -209,10 +226,20 @@ export default function PlansPage() {
 
   const handleToggleActive = async (id: string) => {
     try {
-      await plansApi.toggleActive(id);
+      const response = await plansApi.toggleActive(id);
+      showAlert({
+        title: "Éxito",
+        message:
+          response?.message || "Estado del plan actualizado correctamente",
+      });
       loadPlans();
-    } catch (error) {
-      console.error("Error cambiando estado:", error);
+    } catch (error: any) {
+      showAlert({
+        title: "Error",
+        message:
+          error.response?.data?.message ||
+          "Error al cambiar el estado del plan",
+      });
     }
   };
 
@@ -632,6 +659,19 @@ export default function PlansPage() {
                 />
                 <Label htmlFor="hasFeaturedOption">
                   Opción gráfica destacada
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="hasAIFeature"
+                  checked={formData.hasAIFeature}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, hasAIFeature: checked })
+                  }
+                />
+                <Label htmlFor="hasAIFeature">
+                  Funcionalidades de IA
                 </Label>
               </div>
 
