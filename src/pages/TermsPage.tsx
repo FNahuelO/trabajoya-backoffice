@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { termsApi } from "../services/api";
+import { useAlert } from "../hooks/useAlert";
 import DataTable from "../components/DataTable";
 import { format } from "date-fns";
 import { Upload, CheckCircle, XCircle, Eye } from "lucide-react";
@@ -25,6 +26,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function TermsPage() {
+  const { showAlert, AlertComponent } = useAlert();
   const [terms, setTerms] = useState<Terms[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>("");
@@ -58,7 +60,10 @@ export default function TermsPage() {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadForm.file || !uploadForm.version || !uploadForm.type) {
-      alert("Por favor completa todos los campos requeridos");
+      showAlert({
+        title: "Campos requeridos",
+        message: "Por favor completa todos los campos requeridos",
+      });
       return;
     }
 
@@ -70,7 +75,10 @@ export default function TermsPage() {
         uploadForm.version,
         uploadForm.description || undefined
       );
-      alert("Términos subidos correctamente");
+      showAlert({
+        title: "Éxito",
+        message: "Términos subidos correctamente",
+      });
       setShowUploadModal(false);
       setUploadForm({
         file: null,
@@ -80,10 +88,12 @@ export default function TermsPage() {
       });
       loadTerms();
     } catch (error: any) {
-      alert(
-        error.response?.data?.message ||
-          "Error al subir los términos y condiciones"
-      );
+      showAlert({
+        title: "Error",
+        message:
+          error.response?.data?.message ||
+          "Error al subir los términos y condiciones",
+      });
     } finally {
       setUploading(false);
     }
@@ -326,6 +336,7 @@ export default function TermsPage() {
           </div>
         </div>
       )}
+      <AlertComponent />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { plansApi } from "../services/api";
+import { useAlert } from "../hooks/useAlert";
 import {
   Table,
   TableBody,
@@ -70,6 +71,7 @@ interface PlanFormData {
 }
 
 export default function PlansPage() {
+  const { showAlert, showConfirm, AlertComponent } = useAlert();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -198,9 +200,10 @@ export default function PlansPage() {
       setIsDialogOpen(false);
       loadPlans();
     } catch (error: any) {
-      alert(
-        error.response?.data?.message || "Error al guardar el plan"
-      );
+      showAlert({
+        title: "Error",
+        message: error.response?.data?.message || "Error al guardar el plan",
+      });
     }
   };
 
@@ -214,13 +217,26 @@ export default function PlansPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Estás seguro de eliminar este plan?")) return;
-    try {
-      await plansApi.delete(id);
-      loadPlans();
-    } catch (error) {
-      console.error("Error eliminando plan:", error);
-    }
+    showConfirm({
+      title: "Confirmar eliminación",
+      message:
+        "¿Estás seguro de eliminar permanentemente este plan? Esta acción no se puede deshacer.",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      onConfirm: async () => {
+        try {
+          await plansApi.delete(id);
+          loadPlans();
+        } catch (error) {
+          console.error("Error eliminando plan:", error);
+          showAlert({
+            title: "Error",
+            message:
+              "No se pudo eliminar el plan. Por favor, intenta nuevamente.",
+          });
+        }
+      },
+    });
   };
 
   const handleMove = async (plan: Plan, direction: "up" | "down") => {
@@ -319,11 +335,14 @@ export default function PlansPage() {
               </TableHeader>
               <TableBody>
                 {plans.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-                        No se encontraron planes
-                      </TableCell>
-                    </TableRow>
+                  <TableRow>
+                    <TableCell
+                      colSpan={10}
+                      className="text-center py-8 text-gray-500"
+                    >
+                      No se encontraron planes
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   plans.map((plan) => (
                     <TableRow key={plan.id}>
@@ -334,9 +353,13 @@ export default function PlansPage() {
                           {plan.code}
                         </code>
                       </TableCell>
-                      <TableCell>{formatPrice(plan.price, plan.currency)}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{plan.currency || "USD"}</Badge>
+                        {formatPrice(plan.price, plan.currency)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {plan.currency || "USD"}
+                        </Badge>
                       </TableCell>
                       <TableCell>{plan.durationDays} días</TableCell>
                       <TableCell>
@@ -395,9 +418,7 @@ export default function PlansPage() {
                           </Button>
                           <Switch
                             checked={plan.isActive}
-                            onCheckedChange={() =>
-                              handleToggleActive(plan.id)
-                            }
+                            onCheckedChange={() => handleToggleActive(plan.id)}
                           />
                           <Button
                             variant="ghost"
@@ -461,7 +482,10 @@ export default function PlansPage() {
                   id="code"
                   value={formData.code}
                   onChange={(e) =>
-                    setFormData({ ...formData, code: e.target.value.toUpperCase() })
+                    setFormData({
+                      ...formData,
+                      code: e.target.value.toUpperCase(),
+                    })
                   }
                   placeholder="EJ: URGENT"
                 />
@@ -513,7 +537,9 @@ export default function PlansPage() {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="USD">USD (Dólares - PayPal)</option>
-                  <option value="ARS">ARS (Pesos Argentinos - Otras pasarelas)</option>
+                  <option value="ARS">
+                    ARS (Pesos Argentinos - Otras pasarelas)
+                  </option>
                 </select>
                 <p className="text-sm text-gray-500 mt-1">
                   USD para PayPal, ARS para otras pasarelas
@@ -593,9 +619,7 @@ export default function PlansPage() {
                     setFormData({ ...formData, canModifyCategory: checked })
                   }
                 />
-                <Label htmlFor="canModifyCategory">
-                  Puede modificar rubro
-                </Label>
+                <Label htmlFor="canModifyCategory">Puede modificar rubro</Label>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -639,8 +663,9 @@ export default function PlansPage() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        launchBenefitDuration:
-                          e.target.value ? parseInt(e.target.value) : null,
+                        launchBenefitDuration: e.target.value
+                          ? parseInt(e.target.value)
+                          : null,
                       })
                     }
                     placeholder="4"
@@ -681,7 +706,7 @@ export default function PlansPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AlertComponent />
     </div>
   );
 }
-

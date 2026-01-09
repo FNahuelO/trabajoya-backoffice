@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { catalogsApi } from "../services/api";
+import { useAlert } from "../hooks/useAlert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -72,6 +73,7 @@ interface CatalogFormData {
 }
 
 export default function CatalogsPage() {
+  const { showAlert, showConfirm, AlertComponent } = useAlert();
   const [activeTab, setActiveTab] = useState<CatalogType>("JOB_AREA");
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,9 +157,10 @@ export default function CatalogsPage() {
       setIsDialogOpen(false);
       loadCatalogs();
     } catch (error: any) {
-      alert(
-        error.response?.data?.message || "Error al guardar el catálogo"
-      );
+      showAlert({
+        title: "Error",
+        message: error.response?.data?.message || "Error al guardar el catálogo",
+      });
     }
   };
 
@@ -171,13 +174,24 @@ export default function CatalogsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Estás seguro de eliminar este catálogo?")) return;
-    try {
-      await catalogsApi.delete(id);
-      loadCatalogs();
-    } catch (error) {
-      console.error("Error eliminando catálogo:", error);
-    }
+    showConfirm({
+      title: "Confirmar eliminación",
+      message: "¿Estás seguro de eliminar este catálogo?",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      onConfirm: async () => {
+        try {
+          await catalogsApi.delete(id);
+          loadCatalogs();
+        } catch (error) {
+          console.error("Error eliminando catálogo:", error);
+          showAlert({
+            title: "Error",
+            message: "No se pudo eliminar el catálogo. Por favor, intenta nuevamente.",
+          });
+        }
+      },
+    });
   };
 
   const handleMove = async (catalog: Catalog, direction: "up" | "down") => {
@@ -499,6 +513,7 @@ export default function CatalogsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AlertComponent />
     </div>
   );
 }
