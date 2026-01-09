@@ -81,6 +81,7 @@ export default function PlansPage() {
     name: "",
     code: "",
     price: 0,
+    currency: "USD",
     durationDays: 7,
     unlimitedCvs: true,
     allowedModifications: 0,

@@ -435,6 +435,7 @@ export const plansApi = {
     name: string;
     code: string;
     price: number;
+    currency?: string;
     durationDays: number;
     unlimitedCvs?: boolean;
     allowedModifications?: number;
@@ -458,6 +459,7 @@ export const plansApi = {
     data: {
       name?: string;
       price?: number;
+      currency?: string;
       durationDays?: number;
       unlimitedCvs?: boolean;
       allowedModifications?: number;
