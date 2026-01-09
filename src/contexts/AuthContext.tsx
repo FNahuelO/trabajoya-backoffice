@@ -32,9 +32,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     const response = await authApi.login(email, password);
     if (response.success && response.data) {
-      const accessToken = response.data.accessToken;
+      const { accessToken, refreshToken } = response.data;
       setToken(accessToken);
       localStorage.setItem("token", accessToken);
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+      }
     } else {
       throw new Error("Error al iniciar sesión");
     }
@@ -43,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setToken(null);
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
   };
 
   return (

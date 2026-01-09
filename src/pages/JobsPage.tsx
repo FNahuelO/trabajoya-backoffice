@@ -17,11 +17,12 @@ export default function JobsPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
-  const [moderationStatus, setModerationStatus] = useState<string>("");
+  // Por defecto, solo mostrar trabajos aprobados
+  const [moderationStatus] = useState<string>("APPROVED");
 
   useEffect(() => {
     loadJobs();
-  }, [page, moderationStatus]);
+  }, [page]);
 
   const loadJobs = async () => {
     setLoading(true);
@@ -29,7 +30,7 @@ export default function JobsPage() {
       const response = await adminApi.getAllJobs({
         page,
         pageSize,
-        moderationStatus: moderationStatus || undefined,
+        moderationStatus: "APPROVED", // Solo trabajos aprobados
       });
       if (response.success && response.data) {
         setJobs(response.data.items || []);
@@ -213,30 +214,8 @@ export default function JobsPage() {
       header: "Acciones",
       render: (job: Job) => (
         <div className="flex space-x-2">
-          {job.moderationStatus === "PENDING" && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleApprove(job.id);
-                }}
-                className="text-green-600 hover:text-green-800"
-                title="Aprobar"
-              >
-                <CheckCircle className="h-5 w-5" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleReject(job.id);
-                }}
-                className="text-red-600 hover:text-red-800"
-                title="Rechazar"
-              >
-                <XCircle className="h-5 w-5" />
-              </button>
-            </>
-          )}
+          {/* Los trabajos aprobados no tienen acciones de moderación */}
+          {/* Las acciones de aprobar/rechazar están en PendingJobsPage */}
         </div>
       ),
     },
@@ -245,22 +224,13 @@ export default function JobsPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Trabajos</h1>
-        <select
-          value={moderationStatus}
-          onChange={(e) => {
-            setModerationStatus(e.target.value);
-            setPage(1);
-          }}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Todos los estados</option>
-          <option value="PENDING_PAYMENT">Pendiente Pago</option>
-          <option value="PENDING">Pendientes</option>
-          <option value="APPROVED">Aprobados</option>
-          <option value="REJECTED">Rechazados</option>
-          <option value="AUTO_REJECTED">Auto Rechazados</option>
-        </select>
+        <h1 className="text-3xl font-bold text-gray-900">Trabajos Aprobados</h1>
+        <div className="text-sm text-gray-600">
+          Solo se muestran trabajos aprobados. Para moderar trabajos pendientes, ve a{" "}
+          <a href="/jobs/pending" className="text-blue-600 hover:text-blue-800 underline">
+            Trabajos Pendientes
+          </a>
+        </div>
       </div>
 
       <DataTable data={jobs} columns={columns} loading={loading} />
