@@ -36,6 +36,7 @@ interface Plan {
   name: string;
   code: string;
   price: number;
+  currency: string;
   durationDays: number;
   unlimitedCvs: boolean;
   allowedModifications: number;
@@ -55,6 +56,7 @@ interface PlanFormData {
   name: string;
   code: string;
   price: number;
+  currency: string;
   durationDays: number;
   unlimitedCvs: boolean;
   allowedModifications: number;
@@ -120,6 +122,7 @@ export default function PlansPage() {
       name: "",
       code: "",
       price: 0,
+      currency: "USD",
       durationDays: 7,
       unlimitedCvs: true,
       allowedModifications: 0,
@@ -140,6 +143,7 @@ export default function PlansPage() {
       name: plan.name,
       code: plan.code,
       price: plan.price,
+      currency: plan.currency || "USD",
       durationDays: plan.durationDays,
       unlimitedCvs: plan.unlimitedCvs,
       allowedModifications: plan.allowedModifications,
@@ -160,6 +164,7 @@ export default function PlansPage() {
         await plansApi.update(editingPlan.id, {
           name: formData.name,
           price: formData.price,
+          currency: formData.currency,
           durationDays: formData.durationDays,
           unlimitedCvs: formData.unlimitedCvs,
           allowedModifications: formData.allowedModifications,
@@ -176,6 +181,7 @@ export default function PlansPage() {
           name: formData.name,
           code: formData.code,
           price: formData.price,
+          currency: formData.currency,
           durationDays: formData.durationDays,
           unlimitedCvs: formData.unlimitedCvs,
           allowedModifications: formData.allowedModifications,
@@ -242,10 +248,10 @@ export default function PlansPage() {
     }
   };
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number, currency: string = "USD") => {
     return new Intl.NumberFormat("es-AR", {
       style: "currency",
-      currency: "ARS",
+      currency: currency,
       minimumFractionDigits: 0,
     }).format(price);
   };
@@ -302,6 +308,7 @@ export default function PlansPage() {
                   <TableHead>Nombre</TableHead>
                   <TableHead>Código</TableHead>
                   <TableHead>Precio</TableHead>
+                  <TableHead>Moneda</TableHead>
                   <TableHead>Duración</TableHead>
                   <TableHead>Modificaciones</TableHead>
                   <TableHead>Destacado</TableHead>
@@ -311,11 +318,11 @@ export default function PlansPage() {
               </TableHeader>
               <TableBody>
                 {plans.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-gray-500">
-                      No se encontraron planes
-                    </TableCell>
-                  </TableRow>
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                        No se encontraron planes
+                      </TableCell>
+                    </TableRow>
                 ) : (
                   plans.map((plan) => (
                     <TableRow key={plan.id}>
@@ -326,7 +333,10 @@ export default function PlansPage() {
                           {plan.code}
                         </code>
                       </TableCell>
-                      <TableCell>{formatPrice(plan.price)}</TableCell>
+                      <TableCell>{formatPrice(plan.price, plan.currency)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{plan.currency || "USD"}</Badge>
+                      </TableCell>
                       <TableCell>{plan.durationDays} días</TableCell>
                       <TableCell>
                         {plan.allowedModifications > 0
@@ -472,9 +482,9 @@ export default function PlansPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="price">Precio (ARS)</Label>
+                <Label htmlFor="price">Precio</Label>
                 <Input
                   id="price"
                   type="number"
@@ -487,6 +497,26 @@ export default function PlansPage() {
                   }
                   placeholder="25000"
                 />
+              </div>
+              <div>
+                <Label htmlFor="currency">Moneda</Label>
+                <select
+                  id="currency"
+                  value={formData.currency}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      currency: e.target.value,
+                    })
+                  }
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="USD">USD (Dólares - PayPal)</option>
+                  <option value="ARS">ARS (Pesos Argentinos - Otras pasarelas)</option>
+                </select>
+                <p className="text-sm text-gray-500 mt-1">
+                  USD para PayPal, ARS para otras pasarelas
+                </p>
               </div>
               <div>
                 <Label htmlFor="durationDays">Duración (días)</Label>

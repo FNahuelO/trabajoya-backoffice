@@ -20,6 +20,8 @@ import PlansPage from "./pages/PlansPage";
 import DeleteAccountPage from "./pages/public/DeleteAccountPage";
 import PrivacyPolicyPage from "./pages/public/PrivacyPolicyPage";
 import TermsPagePublic from "./pages/public/TermsPage";
+import PaymentSuccessPage from "./pages/public/PaymentSuccessPage";
+import PaymentCancelPage from "./pages/public/PaymentCancelPage";
 
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
@@ -38,6 +40,9 @@ function AppRoutes() {
       <Route path="/public/delete-account" element={<DeleteAccountPage />} />
       <Route path="/public/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/public/terms" element={<TermsPagePublic />} />
+      {/* PayPal payment callbacks */}
+      <Route path="/payment/success" element={<PaymentSuccessPage />} />
+      <Route path="/payment/cancel" element={<PaymentCancelPage />} />
 
       {/* Login */}
       <Route
