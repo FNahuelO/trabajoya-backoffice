@@ -48,7 +48,6 @@ type CatalogType =
   | "STUDY_STATUSES"
   | "MARITAL_STATUSES";
 
-
 interface Catalog {
   id: string;
   type: CatalogType;
@@ -127,12 +126,9 @@ export default function CatalogsPage() {
     setFormData({
       code: catalog.code,
       translations: {
-        es:
-          catalog.translations.find((t) => t.lang === "ES")?.label || "",
-        en:
-          catalog.translations.find((t) => t.lang === "EN")?.label || "",
-        pt:
-          catalog.translations.find((t) => t.lang === "PT")?.label || "",
+        es: catalog.translations.find((t) => t.lang === "ES")?.label || "",
+        en: catalog.translations.find((t) => t.lang === "EN")?.label || "",
+        pt: catalog.translations.find((t) => t.lang === "PT")?.label || "",
       },
       isActive: catalog.isActive,
     });
@@ -159,7 +155,8 @@ export default function CatalogsPage() {
     } catch (error: any) {
       showAlert({
         title: "Error",
-        message: error.response?.data?.message || "Error al guardar el catálogo",
+        message:
+          error.response?.data?.message || "Error al guardar el catálogo",
       });
     }
   };
@@ -187,7 +184,8 @@ export default function CatalogsPage() {
           console.error("Error eliminando catálogo:", error);
           showAlert({
             title: "Error",
-            message: "No se pudo eliminar el catálogo. Por favor, intenta nuevamente.",
+            message:
+              "No se pudo eliminar el catálogo. Por favor, intenta nuevamente.",
           });
         }
       },
@@ -234,22 +232,27 @@ export default function CatalogsPage() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => {
-        setActiveTab(v as CatalogType);
-        setPage(1);
-        setSearch("");
-      }}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => {
+          setActiveTab(v as CatalogType);
+          setPage(1);
+          setSearch("");
+        }}
+      >
         <TabsList className="flex-wrap">
           <TabsTrigger value="JOB_AREA">Áreas</TabsTrigger>
-          <TabsTrigger value="JOB_TYPE">Tipos</TabsTrigger>
-          <TabsTrigger value="JOB_LEVEL">Niveles</TabsTrigger>
           <TabsTrigger value="JOB_TYPES">Tipos de Trabajo</TabsTrigger>
-          <TabsTrigger value="EXPERIENCE_LEVELS">Niveles de Experiencia</TabsTrigger>
-          <TabsTrigger value="APPLICATION_STATUSES">Estados de Aplicación</TabsTrigger>
+          <TabsTrigger value="EXPERIENCE_LEVELS">
+            Niveles de Experiencia
+          </TabsTrigger>
+          <TabsTrigger value="APPLICATION_STATUSES">
+            Estados de Aplicación
+          </TabsTrigger>
           <TabsTrigger value="MODALITIES">Modalidades</TabsTrigger>
           <TabsTrigger value="LANGUAGE_LEVELS">Niveles de Idioma</TabsTrigger>
           <TabsTrigger value="COMPANY_SIZES">Tamaños de Empresa</TabsTrigger>
-          <TabsTrigger value="SECTORS">Sectores</TabsTrigger>
+          <TabsTrigger value="SECTORS">Industrias</TabsTrigger>
           <TabsTrigger value="STUDY_TYPES">Tipos de Estudio</TabsTrigger>
           <TabsTrigger value="STUDY_STATUSES">Estados de Estudio</TabsTrigger>
           <TabsTrigger value="MARITAL_STATUSES">Estados Civiles</TabsTrigger>
@@ -306,7 +309,10 @@ export default function CatalogsPage() {
                   <TableBody>
                     {catalogs.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        <TableCell
+                          colSpan={7}
+                          className="text-center py-8 text-gray-500"
+                        >
                           No se encontraron catálogos
                         </TableCell>
                       </TableRow>
@@ -324,7 +330,9 @@ export default function CatalogsPage() {
                           <TableCell>{getTranslation(catalog, "PT")}</TableCell>
                           <TableCell>
                             <Badge
-                              variant={catalog.isActive ? "default" : "secondary"}
+                              variant={
+                                catalog.isActive ? "default" : "secondary"
+                              }
                             >
                               {catalog.isActive ? "Activo" : "Inactivo"}
                             </Badge>
@@ -336,7 +344,9 @@ export default function CatalogsPage() {
                                 size="sm"
                                 onClick={() => handleMove(catalog, "up")}
                                 disabled={
-                                  catalogs.findIndex((c) => c.id === catalog.id) === 0
+                                  catalogs.findIndex(
+                                    (c) => c.id === catalog.id
+                                  ) === 0
                                 }
                               >
                                 <ArrowUp className="h-4 w-4" />
@@ -346,7 +356,9 @@ export default function CatalogsPage() {
                                 size="sm"
                                 onClick={() => handleMove(catalog, "down")}
                                 disabled={
-                                  catalogs.findIndex((c) => c.id === catalog.id) ===
+                                  catalogs.findIndex(
+                                    (c) => c.id === catalog.id
+                                  ) ===
                                   catalogs.length - 1
                                 }
                               >
@@ -517,4 +529,3 @@ export default function CatalogsPage() {
     </div>
   );
 }
-
