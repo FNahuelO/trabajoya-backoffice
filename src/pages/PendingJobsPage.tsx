@@ -27,8 +27,9 @@ export default function PendingJobsPage() {
     try {
       const response = await moderationApi.getPendingJobs(page, pageSize);
       if (response.success && response.data) {
-        setJobs(response.data.items || []);
-        setTotal(response.data.total || 0);
+        // El backend devuelve { jobs: [...], pagination: { total, page, pageSize, totalPages } }
+        setJobs(response.data.jobs || []);
+        setTotal(response.data.pagination?.total || 0);
       }
     } catch (error) {
       console.error("Error cargando trabajos pendientes:", error);
