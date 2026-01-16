@@ -124,6 +124,14 @@ export default function PlansPage() {
     isActive: true,
     description: "",
   });
+  const [createIapProducts, setCreateIapProducts] = useState(false);
+  const [iapProductsToCreate, setIapProductsToCreate] = useState<{
+    ios: string;
+    android: string;
+  }>({
+    ios: "",
+    android: "",
+  });
 
   useEffect(() => {
     loadPlans();
@@ -192,6 +200,8 @@ export default function PlansPage() {
       isActive: true,
       description: "",
     });
+    setCreateIapProducts(false);
+    setIapProductsToCreate({ ios: "", android: "" });
     setIsDialogOpen(true);
   };
 
@@ -243,6 +253,7 @@ export default function PlansPage() {
         });
         loadPlans();
       } else {
+        // Crear el plan
         const response = await plansApi.create({
           name: formData.name,
           code: formData.code,
@@ -260,6 +271,40 @@ export default function PlansPage() {
           isActive: formData.isActive,
           description: formData.description || undefined,
         });
+
+        // Si se marcó crear productos IAP, crearlos
+        if (createIapProducts && formData.code) {
+          try {
+            if (iapProductsToCreate.ios) {
+              await iapProductsApi.create({
+                productId: iapProductsToCreate.ios,
+                platform: "IOS",
+                planKey: formData.code,
+                active: true,
+              });
+            }
+            if (iapProductsToCreate.android) {
+              await iapProductsApi.create({
+                productId: iapProductsToCreate.android,
+                platform: "ANDROID",
+                planKey: formData.code,
+                active: true,
+              });
+            }
+          } catch (iapError: any) {
+            console.error("Error creando productos IAP:", iapError);
+            showAlert({
+              title: "Advertencia",
+              message:
+                "Plan creado correctamente, pero hubo un error al crear algunos productos IAP: " +
+                (iapError.response?.data?.message || iapError.message),
+            });
+            loadPlans();
+            setIsDialogOpen(false);
+            return;
+          }
+        }
+
         setIsDialogOpen(false);
         showAlert({
           title: "Éxito",
@@ -1000,6 +1045,71 @@ export default function PlansPage() {
                 placeholder="Descripción del plan..."
               />
             </div>
+
+            {/* Sección opcional para crear productos IAP al crear plan */}
+            {!editingPlan && (
+              <div className="border-t pt-4 space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="createIapProducts"
+                    checked={createIapProducts}
+                    onCheckedChange={(checked) => setCreateIapProducts(checked)}
+                  />
+                  <Label htmlFor="createIapProducts">
+                    Crear productos IAP para este plan
+                  </Label>
+                </div>
+
+                {createIapProducts && (
+                  <div className="space-y-3 pl-6 border-l-2 border-gray-200">
+                    <p className="text-sm text-gray-500">
+                      Opcional: Crea los productos IAP que se usarán en App
+                      Store Connect y Play Console
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="iap-ios">Product ID iOS</Label>
+                        <Input
+                          id="iap-ios"
+                          value={iapProductsToCreate.ios}
+                          onChange={(e) =>
+                            setIapProductsToCreate({
+                              ...iapProductsToCreate,
+                              ios: e.target.value,
+                            })
+                          }
+                          placeholder="job_urgent_7d"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          ID en App Store Connect
+                        </p>
+                      </div>
+                      <div>
+                        <Label htmlFor="iap-android">Product ID Android</Label>
+                        <Input
+                          id="iap-android"
+                          value={iapProductsToCreate.android}
+                          onChange={(e) =>
+                            setIapProductsToCreate({
+                              ...iapProductsToCreate,
+                              android: e.target.value,
+                            })
+                          }
+                          placeholder="job_urgent_7d"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          ID en Play Console
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      💡 Puedes crear los productos IAP después desde el botón{" "}
+                      <Smartphone className="inline h-3 w-3" /> en la tabla
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter>
