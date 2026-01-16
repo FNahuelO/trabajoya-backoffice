@@ -588,6 +588,63 @@ export const plansApi = {
   },
 };
 
+// IAP Products API
+export const iapProductsApi = {
+  list: async (params?: {
+    planKey?: string;
+    platform?: "IOS" | "ANDROID";
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const response = await api.get<ApiResponse<any>>("/api/iap/admin/iap-products", {
+      params,
+    });
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await api.get<ApiResponse<any>>(
+      `/api/iap/admin/iap-products/${id}`
+    );
+    return response.data;
+  },
+  create: async (data: {
+    productId: string;
+    platform: "IOS" | "ANDROID";
+    planKey: string;
+    active?: boolean;
+  }) => {
+    const response = await api.post<ApiResponse<any>>(
+      "/api/iap/admin/iap-products",
+      data
+    );
+    return response.data;
+  },
+  update: async (
+    id: string,
+    data: {
+      active?: boolean;
+    }
+  ) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/iap/admin/iap-products/${id}`,
+      data
+    );
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete<ApiResponse<any>>(
+      `/api/iap/admin/iap-products/${id}`
+    );
+    return response.data;
+  },
+  getByPlan: async (planKey: string) => {
+    const response = await api.get<ApiResponse<any>>("/api/iap/admin/iap-products", {
+      params: { planKey },
+    });
+    return response.data;
+  },
+};
+
 // Helper para obtener todos los usuarios usando Prisma directamente
 // Por ahora, vamos a crear servicios básicos que funcionen con lo disponible
 export default api;

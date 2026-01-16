@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { plansApi } from "../services/api";
+import { plansApi, iapProductsApi } from "../services/api";
 import { useAlert } from "../hooks/useAlert";
 import {
   Table,
@@ -30,6 +30,9 @@ import {
   ArrowDown,
   Search,
   X,
+  Smartphone,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 interface Plan {
@@ -72,6 +75,16 @@ interface PlanFormData {
   description: string;
 }
 
+interface IapProduct {
+  id: string;
+  productId: string;
+  platform: "IOS" | "ANDROID";
+  planKey: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function PlansPage() {
   const { showAlert, showConfirm, AlertComponent } = useAlert();
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -81,6 +94,19 @@ export default function PlansPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
+  const [iapProducts, setIapProducts] = useState<Record<string, IapProduct[]>>(
+    {}
+  );
+  const [isIapDialogOpen, setIsIapDialogOpen] = useState(false);
+  const [selectedPlanForIap, setSelectedPlanForIap] = useState<Plan | null>(
+    null
+  );
+  const [iapFormData, setIapFormData] = useState({
+    productId: "",
+    platform: "IOS" as "IOS" | "ANDROID",
+    active: true,
+  });
   const [formData, setFormData] = useState<PlanFormData>({
     name: "",
     code: "",
@@ -102,6 +128,31 @@ export default function PlansPage() {
   useEffect(() => {
     loadPlans();
   }, [search, page]);
+
+  const loadIapProducts = async (planKey: string) => {
+    try {
+      const response = await iapProductsApi.getByPlan(planKey);
+      if (response.success && response.data) {
+        setIapProducts((prev) => ({
+          ...prev,
+          [planKey]: response.data.items || response.data || [],
+        }));
+      }
+    } catch (error) {
+      console.error("Error cargando productos IAP:", error);
+    }
+  };
+
+  const togglePlanExpansion = (plan: Plan) => {
+    const newExpanded = new Set(expandedPlans);
+    if (newExpanded.has(plan.id)) {
+      newExpanded.delete(plan.id);
+    } else {
+      newExpanded.add(plan.id);
+      loadIapProducts(plan.code);
+    }
+    setExpandedPlans(newExpanded);
+  };
 
   const loadPlans = async () => {
     setLoading(true);
@@ -300,6 +351,81 @@ export default function PlansPage() {
     }).format(price);
   };
 
+  const handleManageIap = (plan: Plan) => {
+    setSelectedPlanForIap(plan);
+    setIapFormData({
+      productId: "",
+      platform: "IOS",
+      active: true,
+    });
+    loadIapProducts(plan.code);
+    setIsIapDialogOpen(true);
+  };
+
+  const handleCreateIap = async () => {
+    if (!selectedPlanForIap) return;
+    try {
+      await iapProductsApi.create({
+        productId: iapFormData.productId,
+        platform: iapFormData.platform,
+        planKey: selectedPlanForIap.code,
+        active: iapFormData.active,
+      });
+      showAlert({
+        title: "Éxito",
+        message: "Producto IAP creado correctamente",
+      });
+      loadIapProducts(selectedPlanForIap.code);
+      setIapFormData({
+        productId: "",
+        platform: "IOS",
+        active: true,
+      });
+    } catch (error: any) {
+      showAlert({
+        title: "Error",
+        message:
+          error.response?.data?.message || "Error al crear el producto IAP",
+      });
+    }
+  };
+
+  const handleDeleteIap = async (id: string) => {
+    showConfirm({
+      title: "Confirmar eliminación",
+      message: "¿Estás seguro de eliminar este producto IAP?",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      onConfirm: async () => {
+        try {
+          await iapProductsApi.delete(id);
+          if (selectedPlanForIap) {
+            loadIapProducts(selectedPlanForIap.code);
+          }
+        } catch (error) {
+          showAlert({
+            title: "Error",
+            message: "No se pudo eliminar el producto IAP",
+          });
+        }
+      },
+    });
+  };
+
+  const handleToggleIapActive = async (id: string, currentActive: boolean) => {
+    try {
+      await iapProductsApi.update(id, { active: !currentActive });
+      if (selectedPlanForIap) {
+        loadIapProducts(selectedPlanForIap.code);
+      }
+    } catch (error) {
+      showAlert({
+        title: "Error",
+        message: "No se pudo actualizar el estado del producto IAP",
+      });
+    }
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -357,6 +483,7 @@ export default function PlansPage() {
                   <TableHead>Modificaciones</TableHead>
                   <TableHead>Destacado</TableHead>
                   <TableHead className="w-24">Activo</TableHead>
+                  <TableHead className="w-32">IAP</TableHead>
                   <TableHead className="w-48">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -364,101 +491,240 @@ export default function PlansPage() {
                 {plans.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={10}
+                      colSpan={11}
                       className="text-center py-8 text-gray-500"
                     >
                       No se encontraron planes
                     </TableCell>
                   </TableRow>
                 ) : (
-                  plans.map((plan) => (
-                    <TableRow key={plan.id}>
-                      <TableCell>{plan.order}</TableCell>
-                      <TableCell className="font-medium">{plan.name}</TableCell>
-                      <TableCell>
-                        <code className="text-sm bg-gray-100 px-2 py-1 rounded">
-                          {plan.code}
-                        </code>
-                      </TableCell>
-                      <TableCell>
-                        {formatPrice(plan.price, plan.currency)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {plan.currency || "USD"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{plan.durationDays} días</TableCell>
-                      <TableCell>
-                        {plan.allowedModifications > 0
-                          ? `${plan.allowedModifications} veces`
-                          : "No permitido"}
-                        {plan.canModifyCategory && (
-                          <span className="text-xs text-gray-500 block">
-                            Rubro: {plan.categoryModifications} vez
-                          </span>
+                  plans.map((plan) => {
+                    const isExpanded = expandedPlans.has(plan.id);
+                    const planIapProducts = iapProducts[plan.code] || [];
+                    const iosProduct = planIapProducts.find(
+                      (p) => p.platform === "IOS"
+                    );
+                    const androidProduct = planIapProducts.find(
+                      (p) => p.platform === "ANDROID"
+                    );
+
+                    return (
+                      <>
+                        <TableRow key={plan.id}>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => togglePlanExpansion(plan)}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {plan.name}
+                          </TableCell>
+                          <TableCell>
+                            <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                              {plan.code}
+                            </code>
+                          </TableCell>
+                          <TableCell>
+                            {formatPrice(plan.price, plan.currency)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {plan.currency || "USD"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{plan.durationDays} días</TableCell>
+                          <TableCell>
+                            {plan.allowedModifications > 0
+                              ? `${plan.allowedModifications} veces`
+                              : "No permitido"}
+                            {plan.canModifyCategory && (
+                              <span className="text-xs text-gray-500 block">
+                                Rubro: {plan.categoryModifications} vez
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {plan.hasFeaturedOption ? (
+                              <Badge variant="default">Sí</Badge>
+                            ) : (
+                              <Badge variant="secondary">No</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={plan.isActive ? "default" : "secondary"}
+                            >
+                              {plan.isActive ? "Activo" : "Inactivo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {iosProduct ? (
+                                <Badge
+                                  variant={
+                                    iosProduct.active ? "default" : "secondary"
+                                  }
+                                  className="text-xs"
+                                >
+                                  iOS
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs opacity-50"
+                                >
+                                  iOS
+                                </Badge>
+                              )}
+                              {androidProduct ? (
+                                <Badge
+                                  variant={
+                                    androidProduct.active
+                                      ? "default"
+                                      : "secondary"
+                                  }
+                                  className="text-xs"
+                                >
+                                  Android
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs opacity-50"
+                                >
+                                  Android
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleMove(plan, "up")}
+                                disabled={
+                                  plans.findIndex((p) => p.id === plan.id) === 0
+                                }
+                              >
+                                <ArrowUp className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleMove(plan, "down")}
+                                disabled={
+                                  plans.findIndex((p) => p.id === plan.id) ===
+                                  plans.length - 1
+                                }
+                              >
+                                <ArrowDown className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(plan)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleManageIap(plan)}
+                                title="Gestionar productos IAP"
+                              >
+                                <Smartphone className="h-4 w-4" />
+                              </Button>
+                              <Switch
+                                checked={plan.isActive}
+                                onCheckedChange={() =>
+                                  handleToggleActive(plan.id)
+                                }
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(plan.id)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                        {isExpanded && planIapProducts.length > 0 && (
+                          <TableRow>
+                            <TableCell colSpan={11} className="bg-gray-50">
+                              <div className="py-4 px-4">
+                                <h4 className="font-semibold mb-3">
+                                  Productos IAP
+                                </h4>
+                                <div className="space-y-2">
+                                  {planIapProducts.map((iap) => (
+                                    <div
+                                      key={iap.id}
+                                      className="flex items-center justify-between p-3 bg-white rounded border"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <Badge
+                                          variant={
+                                            iap.platform === "IOS"
+                                              ? "default"
+                                              : "secondary"
+                                          }
+                                        >
+                                          {iap.platform}
+                                        </Badge>
+                                        <code className="text-sm font-mono">
+                                          {iap.productId}
+                                        </code>
+                                        <Badge
+                                          variant={
+                                            iap.active ? "default" : "secondary"
+                                          }
+                                        >
+                                          {iap.active ? "Activo" : "Inactivo"}
+                                        </Badge>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Switch
+                                          checked={iap.active}
+                                          onCheckedChange={() =>
+                                            handleToggleIapActive(
+                                              iap.id,
+                                              iap.active
+                                            )
+                                          }
+                                        />
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() =>
+                                            handleDeleteIap(iap.id)
+                                          }
+                                          className="text-red-600 hover:text-red-700"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        {plan.hasFeaturedOption ? (
-                          <Badge variant="default">Sí</Badge>
-                        ) : (
-                          <Badge variant="secondary">No</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={plan.isActive ? "default" : "secondary"}
-                        >
-                          {plan.isActive ? "Activo" : "Inactivo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleMove(plan, "up")}
-                            disabled={
-                              plans.findIndex((p) => p.id === plan.id) === 0
-                            }
-                          >
-                            <ArrowUp className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleMove(plan, "down")}
-                            disabled={
-                              plans.findIndex((p) => p.id === plan.id) ===
-                              plans.length - 1
-                            }
-                          >
-                            <ArrowDown className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(plan)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Switch
-                            checked={plan.isActive}
-                            onCheckedChange={() => handleToggleActive(plan.id)}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(plan.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                      </>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
@@ -670,9 +936,7 @@ export default function PlansPage() {
                     setFormData({ ...formData, hasAIFeature: checked })
                   }
                 />
-                <Label htmlFor="hasAIFeature">
-                  Funcionalidades de IA
-                </Label>
+                <Label htmlFor="hasAIFeature">Funcionalidades de IA</Label>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -746,6 +1010,132 @@ export default function PlansPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog para gestionar productos IAP */}
+      <Dialog open={isIapDialogOpen} onOpenChange={setIsIapDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Productos IAP - {selectedPlanForIap?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Gestiona los productos de In-App Purchase asociados a este plan
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Lista de productos IAP existentes */}
+            {selectedPlanForIap &&
+              iapProducts[selectedPlanForIap.code]?.length > 0 && (
+                <div>
+                  <Label className="mb-2 block">Productos IAP existentes</Label>
+                  <div className="space-y-2">
+                    {iapProducts[selectedPlanForIap.code].map((iap) => (
+                      <div
+                        key={iap.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded border"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Badge
+                            variant={
+                              iap.platform === "IOS" ? "default" : "secondary"
+                            }
+                          >
+                            {iap.platform}
+                          </Badge>
+                          <code className="text-sm font-mono">
+                            {iap.productId}
+                          </code>
+                          <Badge variant={iap.active ? "default" : "secondary"}>
+                            {iap.active ? "Activo" : "Inactivo"}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={iap.active}
+                            onCheckedChange={() =>
+                              handleToggleIapActive(iap.id, iap.active)
+                            }
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteIap(iap.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            {/* Formulario para crear nuevo producto IAP */}
+            <div className="border-t pt-4">
+              <Label className="mb-2 block">Crear nuevo producto IAP</Label>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="iap-productId">Product ID</Label>
+                  <Input
+                    id="iap-productId"
+                    value={iapFormData.productId}
+                    onChange={(e) =>
+                      setIapFormData({
+                        ...iapFormData,
+                        productId: e.target.value,
+                      })
+                    }
+                    placeholder="job_urgent_7d"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    ID del producto en App Store Connect / Play Console
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="iap-platform">Plataforma</Label>
+                  <select
+                    id="iap-platform"
+                    value={iapFormData.platform}
+                    onChange={(e) =>
+                      setIapFormData({
+                        ...iapFormData,
+                        platform: e.target.value as "IOS" | "ANDROID",
+                      })
+                    }
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="IOS">iOS (App Store)</option>
+                    <option value="ANDROID">Android (Play Store)</option>
+                  </select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="iap-active"
+                    checked={iapFormData.active}
+                    onCheckedChange={(checked) =>
+                      setIapFormData({ ...iapFormData, active: checked })
+                    }
+                  />
+                  <Label htmlFor="iap-active">Activo</Label>
+                </div>
+                <Button onClick={handleCreateIap} className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear Producto IAP
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsIapDialogOpen(false)}>
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <AlertComponent />
     </div>
   );
