@@ -822,13 +822,13 @@ export default function PlansPage() {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      code: e.target.value.toUpperCase(),
+                      code: e.target.value,
                     })
                   }
-                  placeholder="EJ: URGENT"
+                  placeholder="EJ: URGENT o STANDARD"
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Código único e inmutable (ej: URGENT, STANDARD, PREMIUM)
+                  Código único e inmutable (ej: URGENT, STANDARD, PREMIUM). Se respetará mayúsculas y minúsculas.
                 </p>
               </div>
             )}
