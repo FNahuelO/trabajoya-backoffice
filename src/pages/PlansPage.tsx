@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { plansApi, iapProductsApi } from "../services/api";
 import { useAlert } from "../hooks/useAlert";
 import {
@@ -133,8 +133,22 @@ export default function PlansPage() {
     android: "",
   });
 
+  // Refs para prevenir ejecuciones duplicadas
+  const isSavingRef = useRef(false);
+  const isTogglingRef = useRef(false);
+  const isDeletingRef = useRef(false);
+  const isMovingRef = useRef(false);
+  const isCreatingIapRef = useRef(false);
+  const isTogglingIapRef = useRef(false);
+  const isDeletingIapRef = useRef(false);
+  const isLoadingPlansRef = useRef(false);
+
   useEffect(() => {
-    loadPlans();
+    if (isLoadingPlansRef.current) return;
+    isLoadingPlansRef.current = true;
+    loadPlans().finally(() => {
+      isLoadingPlansRef.current = false;
+    });
   }, [search, page]);
 
   const loadIapProducts = async (planKey: string) => {
@@ -157,7 +171,10 @@ export default function PlansPage() {
       newExpanded.delete(plan.id);
     } else {
       newExpanded.add(plan.id);
-      loadIapProducts(plan.code);
+      // Solo cargar si no están ya cargados
+      if (!iapProducts[plan.code]) {
+        loadIapProducts(plan.code);
+      }
     }
     setExpandedPlans(newExpanded);
   };
@@ -171,8 +188,18 @@ export default function PlansPage() {
         pageSize: 20,
       });
       if (response.success && response.data) {
-        setPlans(response.data.items || []);
+        const plansList = response.data.items || [];
+        setPlans(plansList);
         setTotalPages(response.data.totalPages || 1);
+        
+        // Cargar productos IAP de todos los planes en paralelo
+        const iapPromises = plansList.map((plan: Plan) =>
+          loadIapProducts(plan.code).catch((error) => {
+            console.error(`Error cargando IAP para plan ${plan.code}:`, error);
+            return null;
+          })
+        );
+        await Promise.all(iapPromises);
       }
     } catch (error) {
       console.error("Error cargando planes:", error);
@@ -228,6 +255,9 @@ export default function PlansPage() {
   };
 
   const handleSave = async () => {
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
+    
     try {
       if (editingPlan) {
         const response = await plansApi.update(editingPlan.id, {
@@ -301,6 +331,7 @@ export default function PlansPage() {
             });
             loadPlans();
             setIsDialogOpen(false);
+            isSavingRef.current = false;
             return;
           }
         }
@@ -317,10 +348,15 @@ export default function PlansPage() {
         title: "Error",
         message: error.response?.data?.message || "Error al guardar el plan",
       });
+    } finally {
+      isSavingRef.current = false;
     }
   };
 
   const handleToggleActive = async (id: string) => {
+    if (isTogglingRef.current) return;
+    isTogglingRef.current = true;
+    
     try {
       const response = await plansApi.toggleActive(id);
       showAlert({
@@ -336,10 +372,14 @@ export default function PlansPage() {
           error.response?.data?.message ||
           "Error al cambiar el estado del plan",
       });
+    } finally {
+      isTogglingRef.current = false;
     }
   };
 
   const handleDelete = async (id: string) => {
+    if (isDeletingRef.current) return;
+    
     showConfirm({
       title: "Confirmar eliminación",
       message:
@@ -347,6 +387,9 @@ export default function PlansPage() {
       confirmText: "Eliminar",
       cancelText: "Cancelar",
       onConfirm: async () => {
+        if (isDeletingRef.current) return;
+        isDeletingRef.current = true;
+        
         try {
           await plansApi.delete(id);
           loadPlans();
@@ -357,17 +400,28 @@ export default function PlansPage() {
             message:
               "No se pudo eliminar el plan. Por favor, intenta nuevamente.",
           });
+        } finally {
+          isDeletingRef.current = false;
         }
       },
     });
   };
 
   const handleMove = async (plan: Plan, direction: "up" | "down") => {
+    if (isMovingRef.current) return;
+    isMovingRef.current = true;
+    
     const currentIndex = plans.findIndex((p) => p.id === plan.id);
-    if (currentIndex === -1) return;
+    if (currentIndex === -1) {
+      isMovingRef.current = false;
+      return;
+    }
 
     const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= plans.length) return;
+    if (newIndex < 0 || newIndex >= plans.length) {
+      isMovingRef.current = false;
+      return;
+    }
 
     const targetPlan = plans[newIndex];
     const items = plans.map((p) => {
@@ -385,6 +439,8 @@ export default function PlansPage() {
       loadPlans();
     } catch (error) {
       console.error("Error reordenando:", error);
+    } finally {
+      isMovingRef.current = false;
     }
   };
 
@@ -403,12 +459,17 @@ export default function PlansPage() {
       platform: "IOS",
       active: true,
     });
-    loadIapProducts(plan.code);
+    // Solo cargar si no están ya cargados
+    if (!iapProducts[plan.code]) {
+      loadIapProducts(plan.code);
+    }
     setIsIapDialogOpen(true);
   };
 
   const handleCreateIap = async () => {
-    if (!selectedPlanForIap) return;
+    if (!selectedPlanForIap || isCreatingIapRef.current) return;
+    isCreatingIapRef.current = true;
+    
     try {
       await iapProductsApi.create({
         productId: iapFormData.productId,
@@ -432,16 +493,23 @@ export default function PlansPage() {
         message:
           error.response?.data?.message || "Error al crear el producto IAP",
       });
+    } finally {
+      isCreatingIapRef.current = false;
     }
   };
 
   const handleDeleteIap = async (id: string) => {
+    if (isDeletingIapRef.current) return;
+    
     showConfirm({
       title: "Confirmar eliminación",
       message: "¿Estás seguro de eliminar este producto IAP?",
       confirmText: "Eliminar",
       cancelText: "Cancelar",
       onConfirm: async () => {
+        if (isDeletingIapRef.current) return;
+        isDeletingIapRef.current = true;
+        
         try {
           await iapProductsApi.delete(id);
           if (selectedPlanForIap) {
@@ -452,12 +520,17 @@ export default function PlansPage() {
             title: "Error",
             message: "No se pudo eliminar el producto IAP",
           });
+        } finally {
+          isDeletingIapRef.current = false;
         }
       },
     });
   };
 
   const handleToggleIapActive = async (id: string, currentActive: boolean) => {
+    if (isTogglingIapRef.current) return;
+    isTogglingIapRef.current = true;
+    
     try {
       await iapProductsApi.update(id, { active: !currentActive });
       if (selectedPlanForIap) {
@@ -468,6 +541,8 @@ export default function PlansPage() {
         title: "Error",
         message: "No se pudo actualizar el estado del producto IAP",
       });
+    } finally {
+      isTogglingIapRef.current = false;
     }
   };
 
