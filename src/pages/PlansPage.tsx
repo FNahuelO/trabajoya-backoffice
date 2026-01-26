@@ -424,21 +424,50 @@ export default function PlansPage() {
     }
 
     const targetPlan = plans[newIndex];
-    const items = plans.map((p) => {
-      if (p.id === plan.id) {
-        return { id: p.id, order: targetPlan.order };
-      }
-      if (p.id === targetPlan.id) {
-        return { id: p.id, order: plan.order };
-      }
-      return { id: p.id, order: p.order };
-    });
+    
+    // Asegurarse de que todos los planes tengan un order válido
+    const items = plans
+      .filter((p) => p.id && p.id.trim() !== "") // Filtrar planes sin ID válido
+      .map((p) => {
+        let orderValue: number;
+        
+        if (p.id === plan.id) {
+          orderValue = targetPlan.order ?? 0;
+        } else if (p.id === targetPlan.id) {
+          orderValue = plan.order ?? 0;
+        } else {
+          orderValue = p.order ?? 0;
+        }
+        
+        // Asegurarse de que order sea un número entero válido
+        const order = Number.isInteger(orderValue) ? orderValue : Math.floor(Number(orderValue) || 0);
+        
+        return { 
+          id: p.id, 
+          order: order 
+        };
+      });
+
+    // Validar que todos los items tengan valores válidos
+    const validItems = items.filter(
+      (item) => item.id && item.id.trim() !== "" && Number.isInteger(item.order)
+    );
+
+    if (validItems.length === 0) {
+      console.error("No hay items válidos para reordenar");
+      isMovingRef.current = false;
+      return;
+    }
 
     try {
-      await plansApi.reorder(items);
+      await plansApi.reorder(validItems);
       loadPlans();
     } catch (error) {
       console.error("Error reordenando:", error);
+      showAlert({
+        title: "Error",
+        message: "Error al reordenar los planes. Por favor, intenta nuevamente.",
+      });
     } finally {
       isMovingRef.current = false;
     }

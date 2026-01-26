@@ -15,6 +15,7 @@ import {
   LogOut,
   BookOpen,
   Package,
+  Flag,
 } from "lucide-react";
 
 interface LayoutProps {
@@ -33,6 +34,7 @@ const menuItems = [
   { path: "/terms", icon: FileCheck, label: "Términos y Condiciones" },
   { path: "/catalogs", icon: BookOpen, label: "Catálogos y Opciones" },
   { path: "/plans", icon: Package, label: "Planes" },
+  { path: "/reports", icon: Flag, label: "Denuncias" },
 ];
 
 export default function Layout({ children }: LayoutProps) {

@@ -16,6 +16,7 @@ import MessagesPage from "./pages/MessagesPage";
 import CallsPage from "./pages/CallsPage";
 import CatalogsPage from "./pages/CatalogsPage";
 import PlansPage from "./pages/PlansPage";
+import ReportsPage from "./pages/ReportsPage";
 
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
@@ -57,6 +58,7 @@ function AppRoutes() {
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/catalogs" element={<CatalogsPage />} />
                 <Route path="/plans" element={<PlansPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
               </Routes>
             </Layout>
           </ProtectedRoute>

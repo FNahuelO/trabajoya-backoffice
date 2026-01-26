@@ -167,6 +167,51 @@ export const jobsApi = {
 };
 
 // Moderation
+// Reports API - Requerido por Google Play
+export const reportsApi = {
+  getPending: async (params?: { page?: number; pageSize?: number }) => {
+    const response = await api.get<ApiResponse<any>>("/api/reports/pending", {
+      params,
+    });
+    return response.data;
+  },
+  getAll: async (params?: {
+    page?: number;
+    pageSize?: number;
+    status?: string;
+  }) => {
+    const response = await api.get<ApiResponse<any>>("/api/reports", {
+      params,
+    });
+    return response.data;
+  },
+  markAsReviewed: async (id: string, notes?: string) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/reports/${id}/review`,
+      { notes }
+    );
+    return response.data;
+  },
+  resolve: async (id: string, notes?: string) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/reports/${id}/resolve`,
+      { notes }
+    );
+    return response.data;
+  },
+  dismiss: async (id: string, notes?: string) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/reports/${id}/dismiss`,
+      { notes }
+    );
+    return response.data;
+  },
+  getStats: async () => {
+    const response = await api.get<ApiResponse<any>>("/api/reports/stats");
+    return response.data;
+  },
+};
+
 export const moderationApi = {
   getPendingJobs: async (page = 1, pageSize = 10) => {
     const response = await api.get<ApiResponse<any>>(
