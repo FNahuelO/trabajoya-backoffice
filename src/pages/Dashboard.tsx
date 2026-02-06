@@ -12,6 +12,12 @@ import {
   FileCheck,
   MessageSquare,
   Phone,
+  DollarSign,
+  Gift,
+  Video,
+  Smartphone,
+  Flag,
+  Key,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -26,6 +32,15 @@ interface Stats {
   totalMessages: number;
   totalCalls: number;
   activeSubscriptions: number;
+  totalPayments: number;
+  completedPayments: number;
+  totalPromotions: number;
+  claimedPromotions: number;
+  usedPromotions: number;
+  totalVideoMeetings: number;
+  scheduledMeetings: number;
+  pendingReports: number;
+  totalIapProducts: number;
 }
 
 export default function Dashboard() {
@@ -137,11 +152,46 @@ export default function Dashboard() {
       link: "/subscriptions",
     },
     {
+      title: "Pagos Completados",
+      value: stats.completedPayments,
+      icon: DollarSign,
+      color: "bg-emerald-500",
+      link: "/payments",
+    },
+    {
+      title: "Promociones Usadas",
+      value: stats.usedPromotions,
+      icon: Gift,
+      color: "bg-pink-500",
+      link: "/promotions",
+    },
+    {
+      title: "Video Reuniones",
+      value: stats.scheduledMeetings,
+      icon: Video,
+      color: "bg-violet-500",
+      link: "/video-meetings",
+    },
+    {
+      title: "Productos IAP",
+      value: stats.totalIapProducts,
+      icon: Smartphone,
+      color: "bg-slate-500",
+      link: "/iap-products",
+    },
+    {
+      title: "Denuncias Pendientes",
+      value: stats.pendingReports,
+      icon: Flag,
+      color: "bg-rose-500",
+      link: "/reports",
+    },
+    {
       title: "Opciones",
       value: "Ver",
       icon: Settings,
       color: "bg-gray-500",
-      link: "/options",
+      link: "/catalogs",
     },
     {
       title: "Términos y Condiciones",

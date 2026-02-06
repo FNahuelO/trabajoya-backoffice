@@ -254,3 +254,144 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   totalPages: number;
 }
+
+export type PromotionStatus = "AVAILABLE" | "CLAIMED" | "USED" | "EXPIRED";
+
+export interface UserPromotion {
+  id: string;
+  userId: string;
+  promoKey: string;
+  status: PromotionStatus;
+  claimedAt?: string;
+  usedAt?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: string;
+    email: string;
+    userType: UserType;
+  };
+}
+
+export type PaymentStatus =
+  | "PENDING"
+  | "COMPLETED"
+  | "FAILED"
+  | "CANCELLED"
+  | "REFUNDED";
+export type PaymentMethod = "PAYPAL" | "MERCADOPAGO" | "STRIPE";
+
+export interface PaymentTransaction {
+  id: string;
+  userId: string;
+  empresaId?: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paymentMethod: PaymentMethod;
+  description?: string;
+  planType?: string;
+  planId?: string;
+  failureReason?: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: string;
+    email: string;
+    userType: UserType;
+  };
+  empresa?: {
+    id: string;
+    companyName: string;
+  };
+  plan?: {
+    id: string;
+    name: string;
+    code: string;
+  };
+}
+
+export type VideoMeetingStatus =
+  | "SCHEDULED"
+  | "ACCEPTED"
+  | "REJECTED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "MISSED";
+
+export interface VideoMeeting {
+  id: string;
+  createdById: string;
+  invitedUserId: string;
+  title?: string;
+  description?: string;
+  scheduledAt: string;
+  duration?: number;
+  status: VideoMeetingStatus;
+  meetingUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  startedAt?: string;
+  endedAt?: string;
+  createdBy?: {
+    id: string;
+    email: string;
+    userType: UserType;
+  };
+  invitedUser?: {
+    id: string;
+    email: string;
+    userType: UserType;
+  };
+}
+
+export type EntitlementSource =
+  | "APPLE_IAP"
+  | "GOOGLE_PLAY"
+  | "PROMO"
+  | "MANUAL";
+export type EntitlementStatus = "ACTIVE" | "EXPIRED" | "REVOKED" | "REFUNDED";
+
+export interface JobPostEntitlement {
+  id: string;
+  userId: string;
+  jobPostId: string;
+  source: EntitlementSource;
+  planKey: string;
+  expiresAt: string;
+  status: EntitlementStatus;
+  maxEdits: number;
+  editsUsed: number;
+  allowCategoryChange: boolean;
+  maxCategoryChanges: number;
+  categoryChangesUsed: number;
+  transactionId?: string;
+  originalTransactionId?: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: string;
+    email: string;
+    userType: UserType;
+  };
+  job?: {
+    id: string;
+    title: string;
+    status: string;
+  };
+}
+
+export type IapPlatform = "IOS" | "ANDROID";
+
+export interface IapProduct {
+  id: string;
+  productId: string;
+  platform: IapPlatform;
+  planKey: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

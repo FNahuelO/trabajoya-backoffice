@@ -690,6 +690,62 @@ export const iapProductsApi = {
   },
 };
 
-// Helper para obtener todos los usuarios usando Prisma directamente
-// Por ahora, vamos a crear servicios básicos que funcionen con lo disponible
+// Promotions API
+export const promotionsApi = {
+  list: async (params?: {
+    page?: number;
+    pageSize?: number;
+    status?: string;
+  }) => {
+    const response = await api.get<ApiResponse<any>>("/api/admin/promotions", {
+      params,
+    });
+    return response.data;
+  },
+};
+
+// Payments API
+export const paymentsApi = {
+  list: async (params?: {
+    page?: number;
+    pageSize?: number;
+    status?: string;
+  }) => {
+    const response = await api.get<ApiResponse<any>>("/api/admin/payments", {
+      params,
+    });
+    return response.data;
+  },
+};
+
+// Video Meetings API
+export const videoMeetingsApi = {
+  list: async (params?: {
+    page?: number;
+    pageSize?: number;
+    status?: string;
+  }) => {
+    const response = await api.get<ApiResponse<any>>(
+      "/api/admin/video-meetings",
+      { params }
+    );
+    return response.data;
+  },
+};
+
+// Entitlements API
+export const entitlementsApi = {
+  list: async (params?: {
+    page?: number;
+    pageSize?: number;
+    status?: string;
+  }) => {
+    const response = await api.get<ApiResponse<any>>(
+      "/api/admin/entitlements",
+      { params }
+    );
+    return response.data;
+  },
+};
+
 export default api;

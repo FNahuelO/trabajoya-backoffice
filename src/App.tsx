@@ -17,6 +17,11 @@ import CallsPage from "./pages/CallsPage";
 import CatalogsPage from "./pages/CatalogsPage";
 import PlansPage from "./pages/PlansPage";
 import ReportsPage from "./pages/ReportsPage";
+import PromotionsPage from "./pages/PromotionsPage";
+import PaymentsPage from "./pages/PaymentsPage";
+import VideoMeetingsPage from "./pages/VideoMeetingsPage";
+import IapProductsPage from "./pages/IapProductsPage";
+import EntitlementsPage from "./pages/EntitlementsPage";
 
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
@@ -59,6 +64,11 @@ function AppRoutes() {
                 <Route path="/catalogs" element={<CatalogsPage />} />
                 <Route path="/plans" element={<PlansPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/promotions" element={<PromotionsPage />} />
+                <Route path="/payments" element={<PaymentsPage />} />
+                <Route path="/video-meetings" element={<VideoMeetingsPage />} />
+                <Route path="/iap-products" element={<IapProductsPage />} />
+                <Route path="/entitlements" element={<EntitlementsPage />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
