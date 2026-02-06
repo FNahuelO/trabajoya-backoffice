@@ -3,7 +3,6 @@ import { entitlementsApi } from "../services/api";
 import type { JobPostEntitlement, PaginatedResponse } from "../types";
 import {
   Key,
-  Calendar,
   User,
   Briefcase,
   CheckCircle,

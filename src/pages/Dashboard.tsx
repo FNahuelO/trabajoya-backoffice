@@ -17,7 +17,6 @@ import {
   Video,
   Smartphone,
   Flag,
-  Key,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 

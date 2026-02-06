@@ -296,8 +296,9 @@ export default function ReportsPage() {
 
       <DataTable columns={columns} data={reports} loading={loading} />
       <Pagination
-        currentPage={page}
-        totalPages={Math.ceil(total / pageSize)}
+        page={page}
+        pageSize={pageSize}
+        total={total}
         onPageChange={setPage}
       />
     </div>
