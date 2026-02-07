@@ -8,7 +8,6 @@ import {
   Users,
   Building2,
   FileText,
-  CreditCard,
   FileCheck,
   Menu,
   X,

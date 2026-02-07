@@ -5,17 +5,11 @@ import {
   Building2,
   Briefcase,
   FileText,
-  CreditCard,
-  AlertCircle,
   CheckCircle,
   Settings,
   FileCheck,
-  MessageSquare,
-  Phone,
   DollarSign,
   Gift,
-  Video,
-  Smartphone,
   Flag,
 } from "lucide-react";
 import { Link } from "react-router-dom";

@@ -132,7 +132,7 @@ export default function RolesPage() {
   };
 
   const toggleGroup = (group: string) => {
-    const groupPerms = AVAILABLE_PERMISSIONS
+    const groupPerms: string[] = AVAILABLE_PERMISSIONS
       .filter((p) => p.group === group)
       .map((p) => p.key);
     const allSelected = groupPerms.every((p) => formPermissions.includes(p));
