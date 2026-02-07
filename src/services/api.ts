@@ -710,10 +710,20 @@ export const paymentsApi = {
     page?: number;
     pageSize?: number;
     status?: string;
+    paymentMethod?: string;
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
   }) => {
     const response = await api.get<ApiResponse<any>>("/api/admin/payments", {
       params,
     });
+    return response.data;
+  },
+  stats: async () => {
+    const response = await api.get<ApiResponse<any>>(
+      "/api/admin/payments/stats"
+    );
     return response.data;
   },
 };

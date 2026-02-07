@@ -280,7 +280,7 @@ export type PaymentStatus =
   | "FAILED"
   | "CANCELLED"
   | "REFUNDED";
-export type PaymentMethod = "PAYPAL" | "MERCADOPAGO" | "STRIPE";
+export type PaymentMethod = "PAYPAL" | "MERCADOPAGO" | "STRIPE" | "APPLE_IAP" | "GOOGLE_PLAY";
 
 export interface PaymentTransaction {
   id: string;
@@ -311,6 +311,20 @@ export interface PaymentTransaction {
     name: string;
     code: string;
   };
+}
+
+export interface PaymentStats {
+  totalPayments: number;
+  completedPayments: number;
+  pendingPayments: number;
+  failedPayments: number;
+  totalRevenue: number;
+  byMethod: {
+    paypal: number;
+    appleIap: number;
+    googlePlay: number;
+  };
+  todayPayments: number;
 }
 
 export type VideoMeetingStatus =
