@@ -18,8 +18,6 @@ import {
   Flag,
   Gift,
   DollarSign,
-  Video,
-  Smartphone,
   Key,
 } from "lucide-react";
 
@@ -30,16 +28,12 @@ interface LayoutProps {
 const menuItems = [
   { path: "/", icon: LayoutDashboard, label: "Dashboard" },
   { path: "/jobs", icon: Briefcase, label: "Trabajos" },
-  { path: "/jobs/pending", icon: FileText, label: "Pendientes" },
   { path: "/users", icon: Users, label: "Usuarios" },
   { path: "/empresas", icon: Building2, label: "Empresas" },
   { path: "/postulantes", icon: Users, label: "Postulantes" },
   { path: "/applications", icon: FileText, label: "Aplicaciones" },
-  { path: "/subscriptions", icon: CreditCard, label: "Suscripciones" },
   { path: "/payments", icon: DollarSign, label: "Pagos" },
   { path: "/promotions", icon: Gift, label: "Promociones" },
-  { path: "/video-meetings", icon: Video, label: "Video Reuniones" },
-  { path: "/iap-products", icon: Smartphone, label: "Productos IAP" },
   { path: "/entitlements", icon: Key, label: "Entitlements" },
   { path: "/terms", icon: FileCheck, label: "Términos y Condiciones" },
   { path: "/catalogs", icon: BookOpen, label: "Catálogos y Opciones" },

@@ -109,13 +109,6 @@ export default function Dashboard() {
       link: "/jobs",
     },
     {
-      title: "Trabajos Pendientes",
-      value: stats.pendingJobs,
-      icon: AlertCircle,
-      color: "bg-yellow-500",
-      link: "/jobs/pending",
-    },
-    {
       title: "Trabajos Activos",
       value: stats.activeJobs,
       icon: CheckCircle,
@@ -128,27 +121,6 @@ export default function Dashboard() {
       icon: FileText,
       color: "bg-indigo-500",
       link: "/applications",
-    },
-    {
-      title: "Mensajes",
-      value: stats.totalMessages,
-      icon: MessageSquare,
-      color: "bg-cyan-500",
-      link: "/messages",
-    },
-    {
-      title: "Llamadas",
-      value: stats.totalCalls,
-      icon: Phone,
-      color: "bg-teal-500",
-      link: "/calls",
-    },
-    {
-      title: "Suscripciones Activas",
-      value: stats.activeSubscriptions,
-      icon: CreditCard,
-      color: "bg-red-500",
-      link: "/subscriptions",
     },
     {
       title: "Pagos Completados",
@@ -164,20 +136,7 @@ export default function Dashboard() {
       color: "bg-pink-500",
       link: "/promotions",
     },
-    {
-      title: "Video Reuniones",
-      value: stats.scheduledMeetings,
-      icon: Video,
-      color: "bg-violet-500",
-      link: "/video-meetings",
-    },
-    {
-      title: "Productos IAP",
-      value: stats.totalIapProducts,
-      icon: Smartphone,
-      color: "bg-slate-500",
-      link: "/iap-products",
-    },
+    
     {
       title: "Denuncias Pendientes",
       value: stats.pendingReports,

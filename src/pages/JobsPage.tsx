@@ -1,31 +1,48 @@
 import { useEffect, useState } from "react";
-import { adminApi } from "../services/api";
+import { adminApi, moderationApi } from "../services/api";
 import { useAlert } from "../hooks/useAlert";
 import DataTable from "../components/DataTable";
 import Pagination from "../components/Pagination";
+import JobDetailModal from "../components/JobDetailModal";
 import { format } from "date-fns";
+import { Filter } from "lucide-react";
 import type { Job } from "../types";
 
+type ModerationFilter = "ALL" | "PENDING" | "APPROVED" | "REJECTED" | "AUTO_REJECTED" | "PENDING_PAYMENT";
+
 export default function JobsPage() {
-  const { AlertComponent } = useAlert();
+  const { showAlert, showConfirm, AlertComponent } = useAlert();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
+  const [filter, setFilter] = useState<ModerationFilter>("ALL");
+
+  // Estado para el modal de detalle
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+
 
   useEffect(() => {
-    loadJobs();
-  }, [page]);
+    setPage(1);
+  }, [filter]);
+
+  useEffect(() => {
+    if (filter === "PENDING") {
+      loadPendingJobs();
+    } else {
+      loadJobs();
+    }
+  }, [page, filter]);
 
   const loadJobs = async () => {
     setLoading(true);
     try {
-      const response = await adminApi.getAllJobs({
-        page,
-        pageSize,
-        moderationStatus: "APPROVED", // Solo trabajos aprobados
-      });
+      const params: any = { page, pageSize };
+      if (filter !== "ALL") {
+        params.moderationStatus = filter;
+      }
+      const response = await adminApi.getAllJobs(params);
       if (response.success && response.data) {
         setJobs(response.data.items || []);
         setTotal(response.data.total || 0);
@@ -37,62 +54,60 @@ export default function JobsPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      PENDING_PAYMENT: (
-        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
-          Pendiente Pago
-        </span>
-      ),
-      PENDING: (
-        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-          Pendiente
-        </span>
-      ),
-      APPROVED: (
-        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-          Aprobado
-        </span>
-      ),
-      REJECTED: (
-        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-          Rechazado
-        </span>
-      ),
-      AUTO_REJECTED: (
-        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-          Auto Rechazado
-        </span>
-      ),
-    };
-    return badges[status as keyof typeof badges] || status;
+  const loadPendingJobs = async () => {
+    setLoading(true);
+    try {
+      const response = await moderationApi.getPendingJobs(page, pageSize);
+      if (response.success && response.data) {
+        setJobs(response.data.jobs || []);
+        setTotal(response.data.pagination?.total || 0);
+      }
+    } catch (error) {
+      console.error("Error cargando trabajos pendientes:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getPaymentStatusBadge = (status?: string) => {
-    if (!status) return null;
-    const badges = {
-      PENDING: (
-        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-          Pendiente
-        </span>
-      ),
-      COMPLETED: (
-        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-          Completado
-        </span>
-      ),
-      FAILED: (
-        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-          Fallido
-        </span>
-      ),
-      REFUNDED: (
-        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-          Reembolsado
-        </span>
-      ),
-    };
-    return badges[status as keyof typeof badges] || status;
+  const reloadJobs = () => {
+    if (filter === "PENDING") {
+      loadPendingJobs();
+    } else {
+      loadJobs();
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    showConfirm({
+      title: "Confirmar aprobación",
+      message: "¿Estás seguro de aprobar este trabajo?",
+      confirmText: "Aprobar",
+      cancelText: "Cancelar",
+      onConfirm: async () => {
+        try {
+          await moderationApi.approveJob(id);
+          reloadJobs();
+        } catch (error) {
+          showAlert({
+            title: "Error",
+            message: "Error al aprobar el trabajo",
+          });
+        }
+      },
+    });
+  };
+
+  const handleReject = async (id: string, reason: string) => {
+    try {
+      await moderationApi.rejectJob(id, reason);
+      setSelectedJob(null);
+      reloadJobs();
+    } catch (error) {
+      showAlert({
+        title: "Error",
+        message: "Error al rechazar el trabajo",
+      });
+    }
   };
 
   const columns = [
@@ -112,39 +127,7 @@ export default function JobsPage() {
       accessor: (job: Job) =>
         `${job.location}${job.city ? `, ${job.city}` : ""}`,
     },
-    {
-      key: "jobType",
-      header: "Tipo",
-      accessor: (job: Job) => job.jobType,
-    },
-    {
-      key: "moderationStatus",
-      header: "Estado Moderación",
-      render: (job: Job) => getStatusBadge(job.moderationStatus),
-    },
-    {
-      key: "payment",
-      header: "Pago",
-      render: (job: Job) => (
-        <div className="flex flex-col gap-1">
-          {job.isPaid ? (
-            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-              Pagado
-            </span>
-          ) : (
-            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-              No pagado
-            </span>
-          )}
-          {job.paymentStatus && getPaymentStatusBadge(job.paymentStatus)}
-          {job.paymentAmount && (
-            <span className="text-xs text-gray-600">
-              ${job.paymentAmount} {job.paymentCurrency || "USD"}
-            </span>
-          )}
-        </div>
-      ),
-    },
+   
     {
       key: "applications",
       header: "Aplicaciones",
@@ -155,35 +138,51 @@ export default function JobsPage() {
       header: "Publicado",
       render: (job: Job) => format(new Date(job.publishedAt), "dd/MM/yyyy"),
     },
-    {
-      key: "actions",
-      header: "Acciones",
-      render: () => (
-        <div className="flex space-x-2">
-          {/* Los trabajos aprobados no tienen acciones de moderación */}
-          {/* Las acciones de aprobar/rechazar están en PendingJobsPage */}
-        </div>
-      ),
-    },
+
+  ];
+
+  const filterOptions: { value: ModerationFilter; label: string }[] = [
+    { value: "ALL", label: "Todos" },
+    { value: "PENDING", label: "Pendientes" },
+    { value: "APPROVED", label: "Aprobados" },
+    { value: "REJECTED", label: "Rechazados" },
+    { value: "AUTO_REJECTED", label: "Auto Rechazados" },
+    { value: "PENDING_PAYMENT", label: "Pendiente Pago" },
   ];
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Trabajos Aprobados</h1>
-        <div className="text-sm text-gray-600">
-          Solo se muestran trabajos aprobados. Para moderar trabajos pendientes,
-          ve a{" "}
-          <a
-            href="/jobs/pending"
-            className="text-blue-600 hover:text-blue-800 underline"
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-3xl font-bold text-gray-900">Trabajos</h1>
+
+        <div className="flex items-center gap-2">
+          <Filter className="h-5 w-5 text-gray-500" />
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as ModerationFilter)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
           >
-            Trabajos Pendientes
-          </a>
+            {filterOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <DataTable data={jobs} columns={columns} loading={loading} />
+      {filter === "PENDING" && jobs.length > 0 && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+          Estos trabajos requieren moderación. Podés aprobar o rechazar cada uno desde las acciones.
+        </div>
+      )}
+
+      <DataTable
+        data={jobs}
+        columns={columns}
+        loading={loading}
+        onRowClick={(job) => setSelectedJob(job)}
+      />
       {!loading && total > 0 && (
         <div className="mt-4">
           <Pagination
@@ -195,7 +194,22 @@ export default function JobsPage() {
         </div>
       )}
 
+      {/* Modal de detalle del trabajo */}
+      <JobDetailModal
+        visible={!!selectedJob}
+        job={selectedJob}
+        onClose={() => setSelectedJob(null)}
+        onApprove={(id) => {
+          setSelectedJob(null);
+          handleApprove(id);
+        }}
+        onReject={(id, reason) => {
+          handleReject(id, reason);
+        }}
+      />
+
       <AlertComponent />
     </div>
   );
 }
+

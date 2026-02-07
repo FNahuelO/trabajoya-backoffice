@@ -5,7 +5,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import JobsPage from "./pages/JobsPage";
-import PendingJobsPage from "./pages/PendingJobsPage";
 import UsersPage from "./pages/UsersPage";
 import EmpresasPage from "./pages/EmpresasPage";
 import PostulantesPage from "./pages/PostulantesPage";
@@ -51,7 +50,6 @@ function AppRoutes() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/jobs" element={<JobsPage />} />
-                <Route path="/jobs/pending" element={<PendingJobsPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/empresas" element={<EmpresasPage />} />
                 <Route path="/postulantes" element={<PostulantesPage />} />
