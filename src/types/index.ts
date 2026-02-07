@@ -1,4 +1,4 @@
-export type UserType = "POSTULANTE" | "EMPRESA";
+export type UserType = "POSTULANTE" | "EMPRESA" | "ADMIN";
 
 export interface User {
   id: string;
@@ -397,6 +397,76 @@ export interface JobPostEntitlement {
     status: string;
   };
 }
+
+export interface Role {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  permissions: string[];
+  isSystem: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { users: number };
+}
+
+export interface InternalUser {
+  id: string;
+  email: string;
+  userType: UserType;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  role?: {
+    id: string;
+    name: string;
+    displayName: string;
+  } | null;
+}
+
+// Lista de permisos disponibles del sistema
+export const AVAILABLE_PERMISSIONS = [
+  { key: "users:read", label: "Usuarios: Ver", group: "Usuarios" },
+  { key: "users:write", label: "Usuarios: Editar", group: "Usuarios" },
+  { key: "users:delete", label: "Usuarios: Eliminar", group: "Usuarios" },
+  { key: "jobs:read", label: "Trabajos: Ver", group: "Trabajos" },
+  { key: "jobs:write", label: "Trabajos: Editar", group: "Trabajos" },
+  { key: "jobs:delete", label: "Trabajos: Eliminar", group: "Trabajos" },
+  { key: "empresas:read", label: "Empresas: Ver", group: "Empresas" },
+  { key: "empresas:write", label: "Empresas: Editar", group: "Empresas" },
+  { key: "postulantes:read", label: "Postulantes: Ver", group: "Postulantes" },
+  { key: "postulantes:write", label: "Postulantes: Editar", group: "Postulantes" },
+  { key: "applications:read", label: "Aplicaciones: Ver", group: "Aplicaciones" },
+  { key: "applications:write", label: "Aplicaciones: Editar", group: "Aplicaciones" },
+  { key: "payments:read", label: "Pagos: Ver", group: "Pagos" },
+  { key: "payments:write", label: "Pagos: Editar", group: "Pagos" },
+  { key: "plans:read", label: "Planes: Ver", group: "Planes" },
+  { key: "plans:write", label: "Planes: Editar", group: "Planes" },
+  { key: "catalogs:read", label: "Catálogos: Ver", group: "Catálogos" },
+  { key: "catalogs:write", label: "Catálogos: Editar", group: "Catálogos" },
+  { key: "terms:read", label: "Términos: Ver", group: "Términos" },
+  { key: "terms:write", label: "Términos: Editar", group: "Términos" },
+  { key: "reports:read", label: "Denuncias: Ver", group: "Denuncias" },
+  { key: "reports:write", label: "Denuncias: Gestionar", group: "Denuncias" },
+  { key: "promotions:read", label: "Promociones: Ver", group: "Promociones" },
+  { key: "promotions:write", label: "Promociones: Editar", group: "Promociones" },
+  { key: "subscriptions:read", label: "Suscripciones: Ver", group: "Suscripciones" },
+  { key: "subscriptions:write", label: "Suscripciones: Editar", group: "Suscripciones" },
+  { key: "messages:read", label: "Mensajes: Ver", group: "Mensajes" },
+  { key: "calls:read", label: "Llamadas: Ver", group: "Llamadas" },
+  { key: "video-meetings:read", label: "Videollamadas: Ver", group: "Videollamadas" },
+  { key: "entitlements:read", label: "Entitlements: Ver", group: "Entitlements" },
+  { key: "entitlements:write", label: "Entitlements: Editar", group: "Entitlements" },
+  { key: "iap-products:read", label: "IAP Products: Ver", group: "IAP" },
+  { key: "iap-products:write", label: "IAP Products: Editar", group: "IAP" },
+  { key: "moderation:read", label: "Moderación: Ver", group: "Moderación" },
+  { key: "moderation:write", label: "Moderación: Gestionar", group: "Moderación" },
+  { key: "roles:read", label: "Roles: Ver", group: "Sistema" },
+  { key: "roles:write", label: "Roles: Editar", group: "Sistema" },
+  { key: "internal-users:read", label: "Usuarios internos: Ver", group: "Sistema" },
+  { key: "internal-users:write", label: "Usuarios internos: Editar", group: "Sistema" },
+  { key: "internal-users:delete", label: "Usuarios internos: Eliminar", group: "Sistema" },
+] as const;
 
 export type IapPlatform = "IOS" | "ANDROID";
 

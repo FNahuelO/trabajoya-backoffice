@@ -19,6 +19,8 @@ import {
   Gift,
   DollarSign,
   Key,
+  Shield,
+  UserCog,
 } from "lucide-react";
 
 interface LayoutProps {
@@ -39,6 +41,8 @@ const menuItems = [
   { path: "/catalogs", icon: BookOpen, label: "Catálogos y Opciones" },
   { path: "/plans", icon: Package, label: "Planes" },
   { path: "/reports", icon: Flag, label: "Denuncias" },
+  { path: "/internal-users", icon: UserCog, label: "Usuarios Internos", separator: true },
+  { path: "/roles", icon: Shield, label: "Roles" },
 ];
 
 export default function Layout({ children }: LayoutProps) {
@@ -84,19 +88,27 @@ export default function Layout({ children }: LayoutProps) {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-blue-100 text-blue-700 font-semibold"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
-                </Link>
+                <div key={item.path}>
+                  {"separator" in item && item.separator && (
+                    <div className="my-3 border-t border-gray-200">
+                      <p className="mt-3 mb-1 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        Administración
+                      </p>
+                    </div>
+                  )}
+                  <Link
+                    to={item.path}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                      isActive
+                        ? "bg-blue-100 text-blue-700 font-semibold"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </Link>
+                </div>
               );
             })}
           </nav>

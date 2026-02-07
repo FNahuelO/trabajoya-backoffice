@@ -691,6 +691,103 @@ export const iapProductsApi = {
   },
 };
 
+// Roles API
+export const rolesApi = {
+  list: async () => {
+    const response = await api.get<ApiResponse<any>>("/api/admin/roles");
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await api.get<ApiResponse<any>>(`/api/admin/roles/${id}`);
+    return response.data;
+  },
+  create: async (data: {
+    name: string;
+    displayName: string;
+    description?: string;
+    permissions: string[];
+  }) => {
+    const response = await api.post<ApiResponse<any>>(
+      "/api/admin/roles",
+      data
+    );
+    return response.data;
+  },
+  update: async (
+    id: string,
+    data: {
+      displayName?: string;
+      description?: string;
+      permissions?: string[];
+    }
+  ) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/roles/${id}`,
+      data
+    );
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete<ApiResponse<any>>(
+      `/api/admin/roles/${id}`
+    );
+    return response.data;
+  },
+};
+
+// Internal Users API
+export const internalUsersApi = {
+  list: async (params?: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+  }) => {
+    const response = await api.get<ApiResponse<any>>(
+      "/api/admin/internal-users",
+      { params }
+    );
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await api.get<ApiResponse<any>>(
+      `/api/admin/internal-users/${id}`
+    );
+    return response.data;
+  },
+  create: async (data: {
+    email: string;
+    password: string;
+    roleId?: string;
+  }) => {
+    const response = await api.post<ApiResponse<any>>(
+      "/api/admin/internal-users",
+      data
+    );
+    return response.data;
+  },
+  update: async (
+    id: string,
+    data: {
+      email?: string;
+      password?: string;
+      roleId?: string | null;
+      isVerified?: boolean;
+    }
+  ) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/internal-users/${id}`,
+      data
+    );
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete<ApiResponse<any>>(
+      `/api/admin/internal-users/${id}`
+    );
+    return response.data;
+  },
+};
+
 // Promotions API
 export const promotionsApi = {
   list: async (params?: {
