@@ -1,34 +1,100 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { adminApi } from "../services/api";
 import DataTable from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import { format } from "date-fns";
+import {
+  getCachedData,
+  setCachedData,
+  isCacheValid,
+  hasDataChanged,
+  DEFAULT_CACHE_TTL,
+} from "../lib/cache";
+
+interface PostulantesCache {
+  items: any[];
+  total: number;
+}
+
+function getCacheKeyForPage(page: number, pageSize: number): string {
+  return `postulantes_p${page}_ps${pageSize}`;
+}
 
 export default function PostulantesPage() {
   const [postulantes, setPostulantes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [revalidating, setRevalidating] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    loadPostulantes();
-  }, [page]);
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
-  const loadPostulantes = async () => {
-    setLoading(true);
+  const loadPostulantes = useCallback(async () => {
+    const cacheKey = getCacheKeyForPage(page, pageSize);
+    const cached = getCachedData<PostulantesCache>(cacheKey);
+
+    // Si hay datos en caché, mostrarlos inmediatamente
+    if (cached) {
+      setPostulantes(cached.data.items);
+      setTotal(cached.data.total);
+      setLoading(false);
+
+      // Si el caché aún es válido (< TTL), no hacer refetch
+      if (isCacheValid(cacheKey, DEFAULT_CACHE_TTL)) {
+        return;
+      }
+
+      // Si expiró el TTL, revalidar en background
+      setRevalidating(true);
+    } else {
+      // No hay caché, mostrar loading normal
+      setLoading(true);
+    }
+
     try {
       const response = await adminApi.getPostulantes({ page, pageSize });
+      if (!isMounted.current) return;
+
       if (response.success && response.data) {
-        setPostulantes(response.data.items || []);
-        setTotal(response.data.total || 0);
+        const freshData: PostulantesCache = {
+          items: response.data.items || [],
+          total: response.data.total || 0,
+        };
+
+        // Solo actualizar UI si los datos cambiaron
+        if (hasDataChanged(cacheKey, freshData)) {
+          setPostulantes(freshData.items);
+          setTotal(freshData.total);
+        }
+
+        // Guardar en caché
+        setCachedData(cacheKey, freshData);
       }
     } catch (error) {
       console.error("Error cargando postulantes:", error);
+      // Si falla y no teníamos caché, limpiar
+      if (!cached && isMounted.current) {
+        setPostulantes([]);
+        setTotal(0);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+        setRevalidating(false);
+      }
     }
-  };
+  }, [page, pageSize]);
+
+  useEffect(() => {
+    loadPostulantes();
+  }, [loadPostulantes]);
 
   const columns = [
     {
@@ -138,11 +204,10 @@ export default function PostulantesPage() {
       header: "Verificado",
       render: (postulante: any) => (
         <span
-          className={`px-2 py-1 text-xs font-semibold rounded-full ${
-            postulante.user?.isVerified
+          className={`px-2 py-1 text-xs font-semibold rounded-full ${postulante.user?.isVerified
               ? "bg-green-100 text-green-800"
               : "bg-gray-100 text-gray-800"
-          }`}
+            }`}
         >
           {postulante.user?.isVerified ? "Sí" : "No"}
         </span>
@@ -160,7 +225,14 @@ export default function PostulantesPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Postulantes</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Postulantes</h1>
+        {revalidating && (
+          <span className="text-xs text-gray-400 animate-pulse">
+            Actualizando...
+          </span>
+        )}
+      </div>
 
       <DataTable data={postulantes} columns={columns} loading={loading} />
       {!loading && total > 0 && (

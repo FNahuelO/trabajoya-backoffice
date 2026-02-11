@@ -124,10 +124,9 @@ export default function JobsPage() {
     {
       key: "location",
       header: "Ubicación",
-      accessor: (job: Job) =>
-        `${job.location}${job.city ? `, ${job.city}` : ""}`,
+      accessor: (job: Job) => job.location || "N/A",
     },
-   
+
     {
       key: "applications",
       header: "Aplicaciones",

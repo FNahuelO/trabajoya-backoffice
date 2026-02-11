@@ -57,9 +57,8 @@ export default function DataTable<T extends { id: string }>({
               <tr
                 key={item.id}
                 onClick={() => onRowClick?.(item)}
-                className={`hover:bg-gray-50 ${
-                  onRowClick ? "cursor-pointer" : ""
-                }`}
+                className={`hover:bg-gray-50 ${onRowClick ? "cursor-pointer" : ""
+                  }`}
               >
                 {columns.map((column) => (
                   <td
@@ -69,8 +68,8 @@ export default function DataTable<T extends { id: string }>({
                     {column.render
                       ? column.render(item)
                       : column.accessor
-                      ? column.accessor(item)
-                      : (item as any)[column.key]}
+                        ? column.accessor(item)
+                        : (item as any)[column.key]}
                   </td>
                 ))}
               </tr>
