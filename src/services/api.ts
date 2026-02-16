@@ -473,7 +473,8 @@ export const catalogsApi = {
       | "SECTORS"
       | "STUDY_TYPES"
       | "STUDY_STATUSES"
-      | "MARITAL_STATUSES";
+      | "MARITAL_STATUSES"
+      | "JOB_SCHEDULES";
     search?: string;
     page?: number;
     pageSize?: number;
@@ -503,7 +504,8 @@ export const catalogsApi = {
       | "SECTORS"
       | "STUDY_TYPES"
       | "STUDY_STATUSES"
-      | "MARITAL_STATUSES";
+      | "MARITAL_STATUSES"
+      | "JOB_SCHEDULES";
     code: string;
     translations: { es: string; en: string; pt: string };
     isActive?: boolean;

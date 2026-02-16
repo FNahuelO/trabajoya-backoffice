@@ -46,7 +46,8 @@ type CatalogType =
   | "SECTORS"
   | "STUDY_TYPES"
   | "STUDY_STATUSES"
-  | "MARITAL_STATUSES";
+  | "MARITAL_STATUSES"
+  | "JOB_SCHEDULES";
 
 interface Catalog {
   id: string;
@@ -256,6 +257,7 @@ export default function CatalogsPage() {
           <TabsTrigger value="STUDY_TYPES">Tipos de Estudio</TabsTrigger>
           <TabsTrigger value="STUDY_STATUSES">Estados de Estudio</TabsTrigger>
           <TabsTrigger value="MARITAL_STATUSES">Estados Civiles</TabsTrigger>
+          <TabsTrigger value="JOB_SCHEDULES">Horarios</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
