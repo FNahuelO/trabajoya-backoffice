@@ -573,6 +573,8 @@ export const plansApi = {
     code: string;
     price: number;
     currency?: string;
+    priceUsd?: number;
+    priceArs?: number;
     durationDays: number;
     unlimitedCvs?: boolean;
     allowedModifications?: number;
@@ -595,6 +597,8 @@ export const plansApi = {
       name?: string;
       price?: number;
       currency?: string;
+      priceUsd?: number;
+      priceArs?: number;
       durationDays?: number;
       unlimitedCvs?: boolean;
       allowedModifications?: number;
@@ -795,11 +799,64 @@ export const promotionsApi = {
   list: async (params?: {
     page?: number;
     pageSize?: number;
-    status?: string;
+    search?: string;
+    isActive?: boolean;
   }) => {
     const response = await api.get<ApiResponse<any>>("/api/admin/promotions", {
       params,
     });
+    return response.data;
+  },
+  create: async (data: {
+    code: string;
+    title: string;
+    description?: string;
+    durationDays: number;
+    startAt?: string;
+    endAt?: string;
+    isActive?: boolean;
+    metadata?: Record<string, any>;
+  }) => {
+    const response = await api.post<ApiResponse<any>>(
+      "/api/admin/promotions",
+      data
+    );
+    return response.data;
+  },
+  update: async (
+    id: string,
+    data: {
+      title?: string;
+      description?: string;
+      durationDays?: number;
+      startAt?: string;
+      endAt?: string;
+      isActive?: boolean;
+      metadata?: Record<string, any>;
+    }
+  ) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/promotions/${id}`,
+      data
+    );
+    return response.data;
+  },
+  toggleActive: async (id: string) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/promotions/${id}/activate`
+    );
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete<ApiResponse<any>>(
+      `/api/admin/promotions/${id}`
+    );
+    return response.data;
+  },
+  getLaunchTrialStatus: async () => {
+    const response = await api.get<ApiResponse<any>>(
+      "/api/promotions/launch-trial/status"
+    );
     return response.data;
   },
 };

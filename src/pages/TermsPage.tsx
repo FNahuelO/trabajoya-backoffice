@@ -107,9 +107,8 @@ export default function TermsPage() {
     };
     return (
       <span
-        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-          colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800"
-        }`}
+        className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800"
+          }`}
       >
         {typeLabels[type] || type}
       </span>
@@ -132,11 +131,10 @@ export default function TermsPage() {
       header: "Estado",
       render: (term: Terms) => (
         <span
-          className={`px-2 py-1 text-xs font-semibold rounded-full ${
-            term.isActive
+          className={`px-2 py-1 text-xs font-semibold rounded-full ${term.isActive
               ? "bg-green-100 text-green-800"
               : "bg-gray-100 text-gray-800"
-          }`}
+            }`}
         >
           {term.isActive ? (
             <span className="flex items-center gap-1">
@@ -160,15 +158,6 @@ export default function TermsPage() {
             <span className="text-gray-400 text-sm">Sin descripción</span>
           )}
         </div>
-      ),
-    },
-    {
-      key: "acceptances",
-      header: "Aceptaciones",
-      render: (term: Terms) => (
-        <span className="text-sm text-gray-600">
-          {term._count?.acceptances || 0}
-        </span>
       ),
     },
     {

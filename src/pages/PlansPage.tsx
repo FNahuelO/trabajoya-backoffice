@@ -41,6 +41,8 @@ interface Plan {
   code: string;
   price: number;
   currency: string;
+  priceUsd?: number;
+  priceArs?: number;
   durationDays: number;
   unlimitedCvs: boolean;
   allowedModifications: number;
@@ -60,8 +62,8 @@ interface Plan {
 interface PlanFormData {
   name: string;
   code: string;
-  price: number;
-  currency: string;
+  priceUsd: number;
+  priceArs: number;
   durationDays: number;
   unlimitedCvs: boolean;
   allowedModifications: number;
@@ -110,8 +112,8 @@ export default function PlansPage() {
   const [formData, setFormData] = useState<PlanFormData>({
     name: "",
     code: "",
-    price: 0,
-    currency: "USD",
+    priceUsd: 0,
+    priceArs: 0,
     durationDays: 7,
     unlimitedCvs: true,
     allowedModifications: 0,
@@ -191,7 +193,7 @@ export default function PlansPage() {
         const plansList = response.data.items || [];
         setPlans(plansList);
         setTotalPages(response.data.totalPages || 1);
-        
+
         // Cargar productos IAP de todos los planes en paralelo
         const iapPromises = plansList.map((plan: Plan) =>
           loadIapProducts(plan.code).catch((error) => {
@@ -213,8 +215,8 @@ export default function PlansPage() {
     setFormData({
       name: "",
       code: "",
-      price: 0,
-      currency: "USD",
+      priceUsd: 0,
+      priceArs: 0,
       durationDays: 7,
       unlimitedCvs: true,
       allowedModifications: 0,
@@ -237,8 +239,18 @@ export default function PlansPage() {
     setFormData({
       name: plan.name,
       code: plan.code,
-      price: plan.price,
-      currency: plan.currency || "USD",
+      priceUsd:
+        typeof plan.priceUsd === "number"
+          ? plan.priceUsd
+          : (plan.currency || "USD").toUpperCase() === "USD"
+            ? plan.price
+            : 0,
+      priceArs:
+        typeof plan.priceArs === "number"
+          ? plan.priceArs
+          : (plan.currency || "USD").toUpperCase() === "ARS"
+            ? plan.price
+            : 0,
       durationDays: plan.durationDays,
       unlimitedCvs: plan.unlimitedCvs,
       allowedModifications: plan.allowedModifications,
@@ -257,13 +269,16 @@ export default function PlansPage() {
   const handleSave = async () => {
     if (isSavingRef.current) return;
     isSavingRef.current = true;
-    
+
     try {
       if (editingPlan) {
         const response = await plansApi.update(editingPlan.id, {
           name: formData.name,
-          price: formData.price,
-          currency: formData.currency,
+          priceUsd: formData.priceUsd,
+          priceArs: formData.priceArs,
+          // Compatibilidad hacia atrás para APIs antiguas
+          price: formData.priceUsd,
+          currency: "USD",
           durationDays: formData.durationDays,
           unlimitedCvs: formData.unlimitedCvs,
           allowedModifications: formData.allowedModifications,
@@ -287,8 +302,11 @@ export default function PlansPage() {
         const response = await plansApi.create({
           name: formData.name,
           code: formData.code,
-          price: formData.price,
-          currency: formData.currency,
+          priceUsd: formData.priceUsd,
+          priceArs: formData.priceArs,
+          // Compatibilidad hacia atrás para APIs antiguas
+          price: formData.priceUsd,
+          currency: "USD",
           durationDays: formData.durationDays,
           unlimitedCvs: formData.unlimitedCvs,
           allowedModifications: formData.allowedModifications,
@@ -356,7 +374,7 @@ export default function PlansPage() {
   const handleToggleActive = async (id: string) => {
     if (isTogglingRef.current) return;
     isTogglingRef.current = true;
-    
+
     try {
       const response = await plansApi.toggleActive(id);
       showAlert({
@@ -379,7 +397,7 @@ export default function PlansPage() {
 
   const handleDelete = async (id: string) => {
     if (isDeletingRef.current) return;
-    
+
     showConfirm({
       title: "Confirmar eliminación",
       message:
@@ -389,7 +407,7 @@ export default function PlansPage() {
       onConfirm: async () => {
         if (isDeletingRef.current) return;
         isDeletingRef.current = true;
-        
+
         try {
           await plansApi.delete(id);
           loadPlans();
@@ -410,7 +428,7 @@ export default function PlansPage() {
   const handleMove = async (plan: Plan, direction: "up" | "down") => {
     if (isMovingRef.current) return;
     isMovingRef.current = true;
-    
+
     const currentIndex = plans.findIndex((p) => p.id === plan.id);
     if (currentIndex === -1) {
       isMovingRef.current = false;
@@ -424,13 +442,13 @@ export default function PlansPage() {
     }
 
     const targetPlan = plans[newIndex];
-    
+
     // Asegurarse de que todos los planes tengan un order válido
     const items = plans
       .filter((p) => p.id && p.id.trim() !== "") // Filtrar planes sin ID válido
       .map((p) => {
         let orderValue: number;
-        
+
         if (p.id === plan.id) {
           orderValue = targetPlan.order ?? 0;
         } else if (p.id === targetPlan.id) {
@@ -438,13 +456,13 @@ export default function PlansPage() {
         } else {
           orderValue = p.order ?? 0;
         }
-        
+
         // Asegurarse de que order sea un número entero válido
         const order = Number.isInteger(orderValue) ? orderValue : Math.floor(Number(orderValue) || 0);
-        
-        return { 
-          id: p.id, 
-          order: order 
+
+        return {
+          id: p.id,
+          order: order
         };
       });
 
@@ -498,7 +516,7 @@ export default function PlansPage() {
   const handleCreateIap = async () => {
     if (!selectedPlanForIap || isCreatingIapRef.current) return;
     isCreatingIapRef.current = true;
-    
+
     try {
       await iapProductsApi.create({
         productId: iapFormData.productId,
@@ -529,7 +547,7 @@ export default function PlansPage() {
 
   const handleDeleteIap = async (id: string) => {
     if (isDeletingIapRef.current) return;
-    
+
     showConfirm({
       title: "Confirmar eliminación",
       message: "¿Estás seguro de eliminar este producto IAP?",
@@ -538,7 +556,7 @@ export default function PlansPage() {
       onConfirm: async () => {
         if (isDeletingIapRef.current) return;
         isDeletingIapRef.current = true;
-        
+
         try {
           await iapProductsApi.delete(id);
           if (selectedPlanForIap) {
@@ -559,7 +577,7 @@ export default function PlansPage() {
   const handleToggleIapActive = async (id: string, currentActive: boolean) => {
     if (isTogglingIapRef.current) return;
     isTogglingIapRef.current = true;
-    
+
     try {
       await iapProductsApi.update(id, { active: !currentActive });
       if (selectedPlanForIap) {
@@ -626,8 +644,8 @@ export default function PlansPage() {
                   <TableHead className="w-20">Orden</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Código</TableHead>
-                  <TableHead>Precio</TableHead>
-                  <TableHead>Moneda</TableHead>
+                  <TableHead>Precio USD</TableHead>
+                  <TableHead>Precio ARS</TableHead>
                   <TableHead>Duración</TableHead>
                   <TableHead>Modificaciones</TableHead>
                   <TableHead>Destacado</TableHead>
@@ -682,12 +700,16 @@ export default function PlansPage() {
                             </code>
                           </TableCell>
                           <TableCell>
-                            {formatPrice(plan.price, plan.currency)}
+                            {formatPrice(
+                              typeof plan.priceUsd === "number" ? plan.priceUsd : plan.price,
+                              "USD"
+                            )}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">
-                              {plan.currency || "USD"}
-                            </Badge>
+                            {formatPrice(
+                              typeof plan.priceArs === "number" ? plan.priceArs : 0,
+                              "ARS"
+                            )}
                           </TableCell>
                           <TableCell>{plan.durationDays} días</TableCell>
                           <TableCell>
@@ -951,41 +973,34 @@ export default function PlansPage() {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="price">Precio</Label>
+                <Label htmlFor="priceUsd">Precio USD</Label>
                 <Input
-                  id="price"
+                  id="priceUsd"
                   type="number"
-                  value={formData.price}
+                  value={formData.priceUsd}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      price: parseFloat(e.target.value) || 0,
+                      priceUsd: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="19.99"
+                />
+              </div>
+              <div>
+                <Label htmlFor="priceArs">Precio ARS</Label>
+                <Input
+                  id="priceArs"
+                  type="number"
+                  value={formData.priceArs}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      priceArs: parseFloat(e.target.value) || 0,
                     })
                   }
                   placeholder="25000"
                 />
-              </div>
-              <div>
-                <Label htmlFor="currency">Moneda</Label>
-                <select
-                  id="currency"
-                  value={formData.currency}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      currency: e.target.value,
-                    })
-                  }
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="USD">USD (Dólares - PayPal)</option>
-                  <option value="ARS">
-                    ARS (Pesos Argentinos - Otras pasarelas)
-                  </option>
-                </select>
-                <p className="text-sm text-gray-500 mt-1">
-                  USD para PayPal, ARS para otras pasarelas
-                </p>
               </div>
               <div>
                 <Label htmlFor="durationDays">Duración (días)</Label>
