@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { internalUsersApi, rolesApi } from "../services/api";
 import DataTable from "../components/DataTable";
+import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import { format } from "date-fns";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
@@ -15,6 +16,13 @@ export default function InternalUsersPage() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [tableQuery, setTableQuery] = useState<DataTableQuery>({
+    dateFrom: "",
+    dateTo: "",
+    alphabeticalOrder: "none",
+    sortBy: null,
+    sortOrder: null,
+  });
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<InternalUser | null>(null);
   const [saving, setSaving] = useState(false);
@@ -27,7 +35,7 @@ export default function InternalUsersPage() {
 
   useEffect(() => {
     loadUsers();
-  }, [page, search]);
+  }, [page, search, tableQuery.dateFrom, tableQuery.dateTo, tableQuery.sortBy, tableQuery.sortOrder]);
 
   useEffect(() => {
     loadRoles();
@@ -40,6 +48,10 @@ export default function InternalUsersPage() {
         page,
         pageSize,
         search: search || undefined,
+        dateFrom: tableQuery.dateFrom || undefined,
+        dateTo: tableQuery.dateTo || undefined,
+        sortBy: tableQuery.sortBy || undefined,
+        sortOrder: tableQuery.sortOrder || undefined,
       });
       if (response.success && response.data) {
         setUsers(response.data.items || []);
@@ -267,7 +279,16 @@ export default function InternalUsersPage() {
         )}
       </div>
 
-      <DataTable data={users} columns={columns} loading={loading} />
+      <DataTable
+        data={users}
+        columns={columns}
+        loading={loading}
+        serverSide
+        onQueryChange={(query) => {
+          setTableQuery(query);
+          setPage(1);
+        }}
+      />
       {!loading && total > 0 && (
         <div className="mt-4">
           <Pagination

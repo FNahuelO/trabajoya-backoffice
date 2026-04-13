@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../services/api";
 import DataTable from "../components/DataTable";
+import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import { format } from "date-fns";
 import type { User } from "../types";
@@ -12,18 +13,20 @@ export default function UsersPage() {
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [userType, setUserType] = useState<string>("");
+  const [tableQuery, setTableQuery] = useState<DataTableQuery>({
+    sortBy: null,
+    sortOrder: null,
+  });
 
-  useEffect(() => {
-    loadUsers();
-  }, [page, userType]);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
       const response = await adminApi.getUsers({
         page,
         pageSize,
         userType: userType || undefined,
+        sortBy: tableQuery.sortBy || undefined,
+        sortOrder: tableQuery.sortOrder || undefined,
       });
       if (response.success && response.data) {
         setUsers(response.data.items || []);
@@ -34,7 +37,11 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, tableQuery.sortBy, tableQuery.sortOrder, userType]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const columns = [
     {
@@ -47,11 +54,10 @@ export default function UsersPage() {
       header: "Tipo",
       render: (user: User) => (
         <span
-          className={`px-2 py-1 text-xs font-semibold rounded-full ${
-            user.userType === "EMPRESA"
+          className={`px-2 py-1 text-xs font-semibold rounded-full ${user.userType === "EMPRESA"
               ? "bg-blue-100 text-blue-800"
               : "bg-purple-100 text-purple-800"
-          }`}
+            }`}
         >
           {user.userType}
         </span>
@@ -62,11 +68,10 @@ export default function UsersPage() {
       header: "Verificado",
       render: (user: User) => (
         <span
-          className={`px-2 py-1 text-xs font-semibold rounded-full ${
-            user.isVerified
+          className={`px-2 py-1 text-xs font-semibold rounded-full ${user.isVerified
               ? "bg-green-100 text-green-800"
               : "bg-gray-100 text-gray-800"
-          }`}
+            }`}
         >
           {user.isVerified ? "Sí" : "No"}
         </span>
@@ -97,7 +102,16 @@ export default function UsersPage() {
         </select>
       </div>
 
-      <DataTable data={users} columns={columns} loading={loading} />
+      <DataTable
+        data={users}
+        columns={columns}
+        loading={loading}
+        serverSide
+        onQueryChange={(query) => {
+          setTableQuery(query);
+          setPage(1);
+        }}
+      />
       {!loading && total > 0 && (
         <div className="mt-4">
           <Pagination

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { videoMeetingsApi } from "../services/api";
 import type { VideoMeeting, PaginatedResponse } from "../types";
+import { AlphabeticalOrder, applyTableFilters } from "../utils/tableFilters";
 import {
   Video,
   Calendar,
@@ -50,6 +51,10 @@ export default function VideoMeetingsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [alphabeticalOrder, setAlphabeticalOrder] =
+    useState<AlphabeticalOrder>("none");
   const pageSize = 20;
 
   useEffect(() => {
@@ -89,6 +94,19 @@ export default function VideoMeetingsPage() {
     return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
   };
 
+  const visibleMeetings = useMemo(
+    () =>
+      applyTableFilters(meetings, {
+        dateFrom,
+        dateTo,
+        alphabeticalOrder,
+        getCreatedAt: (meeting) =>
+          (meeting as any).createdAt || meeting.scheduledAt,
+        getAlphabeticalValue: (meeting) => meeting.title || meeting.id,
+      }),
+    [alphabeticalOrder, dateFrom, dateTo, meetings]
+  );
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -116,12 +134,54 @@ export default function VideoMeetingsPage() {
           </select>
         </div>
       </div>
+      <div className="mb-4 bg-white rounded-lg shadow p-4">
+        <div className="flex flex-wrap gap-3 items-end">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Fecha creación desde
+            </label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Fecha creación hasta
+            </label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Orden alfabético
+            </label>
+            <select
+              value={alphabeticalOrder}
+              onChange={(e) =>
+                setAlphabeticalOrder(e.target.value as AlphabeticalOrder)
+              }
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            >
+              <option value="none">Sin ordenar</option>
+              <option value="asc">A - Z</option>
+              <option value="desc">Z - A</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
-      ) : meetings.length === 0 ? (
+      ) : visibleMeetings.length === 0 ? (
         <div className="text-center py-12">
           <Video className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
@@ -161,7 +221,7 @@ export default function VideoMeetingsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {meetings.map((meeting) => {
+                {visibleMeetings.map((meeting) => {
                   const StatusIcon =
                     statusIcons[meeting.status] || AlertCircle;
                   return (

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../services/api";
 import DataTable from "../components/DataTable";
+import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import { format } from "date-fns";
 
@@ -10,15 +11,20 @@ export default function EmpresasPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
+  const [tableQuery, setTableQuery] = useState<DataTableQuery>({
+    sortBy: null,
+    sortOrder: null,
+  });
 
-  useEffect(() => {
-    loadEmpresas();
-  }, [page]);
-
-  const loadEmpresas = async () => {
+  const loadEmpresas = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await adminApi.getEmpresas({ page, pageSize });
+      const response = await adminApi.getEmpresas({
+        page,
+        pageSize,
+        sortBy: tableQuery.sortBy || undefined,
+        sortOrder: tableQuery.sortOrder || undefined,
+      });
       if (response.success && response.data) {
         setEmpresas(response.data.items || []);
         setTotal(response.data.total || 0);
@@ -28,7 +34,11 @@ export default function EmpresasPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, tableQuery.sortBy, tableQuery.sortOrder]);
+
+  useEffect(() => {
+    loadEmpresas();
+  }, [loadEmpresas]);
 
   const columns = [
     {
@@ -138,7 +148,16 @@ export default function EmpresasPage() {
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Empresas</h1>
 
-      <DataTable data={empresas} columns={columns} loading={loading} />
+      <DataTable
+        data={empresas}
+        columns={columns}
+        loading={loading}
+        serverSide
+        onQueryChange={(query) => {
+          setTableQuery(query);
+          setPage(1);
+        }}
+      />
       {!loading && total > 0 && (
         <div className="mt-4">
           <Pagination

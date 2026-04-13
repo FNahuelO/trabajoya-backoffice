@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { adminApi, moderationApi } from "../services/api";
 import { useAlert } from "../hooks/useAlert";
 import DataTable from "../components/DataTable";
+import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import JobDetailModal from "../components/JobDetailModal";
 import { format } from "date-fns";
@@ -18,6 +19,10 @@ export default function JobsPage() {
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [filter, setFilter] = useState<ModerationFilter>("ALL");
+  const [tableQuery, setTableQuery] = useState<DataTableQuery>({
+    sortBy: null,
+    sortOrder: null,
+  });
 
   // Estado para el modal de detalle
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -33,7 +38,7 @@ export default function JobsPage() {
     } else {
       loadJobs();
     }
-  }, [page, filter]);
+  }, [page, filter, tableQuery.sortBy, tableQuery.sortOrder]);
 
   const loadJobs = async () => {
     setLoading(true);
@@ -42,6 +47,8 @@ export default function JobsPage() {
       if (filter !== "ALL") {
         params.moderationStatus = filter;
       }
+      params.sortBy = tableQuery.sortBy || undefined;
+      params.sortOrder = tableQuery.sortOrder || undefined;
       const response = await adminApi.getAllJobs(params);
       if (response.success && response.data) {
         setJobs(response.data.items || []);
@@ -181,6 +188,11 @@ export default function JobsPage() {
         columns={columns}
         loading={loading}
         onRowClick={(job) => setSelectedJob(job)}
+        serverSide={filter !== "PENDING"}
+        onQueryChange={(query) => {
+          setTableQuery(query);
+          setPage(1);
+        }}
       />
       {!loading && total > 0 && (
         <div className="mt-4">

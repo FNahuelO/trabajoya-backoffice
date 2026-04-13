@@ -180,6 +180,10 @@ export const reportsApi = {
     page?: number;
     pageSize?: number;
     status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   }) => {
     const response = await api.get<ApiResponse<any>>("/api/reports", {
       params,
@@ -259,19 +263,31 @@ export const adminApi = {
     page?: number;
     pageSize?: number;
     userType?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   }) => {
     const response = await api.get<ApiResponse<any>>("/api/admin/users", {
       params,
     });
     return response.data;
   },
-  getEmpresas: async (params?: { page?: number; pageSize?: number }) => {
+  getEmpresas: async (params?: {
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }) => {
     const response = await api.get<ApiResponse<any>>("/api/admin/empresas", {
       params,
     });
     return response.data;
   },
-  getPostulantes: async (params?: { page?: number; pageSize?: number }) => {
+  getPostulantes: async (params?: {
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }) => {
     const response = await api.get<ApiResponse<any>>("/api/admin/postulantes", {
       params,
     });
@@ -282,6 +298,8 @@ export const adminApi = {
     pageSize?: number;
     status?: string;
     moderationStatus?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   }) => {
     const response = await api.get<ApiResponse<any>>("/api/admin/jobs/all", {
       params,
@@ -292,6 +310,8 @@ export const adminApi = {
     page?: number;
     pageSize?: number;
     status?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   }) => {
     const response = await api.get<ApiResponse<any>>(
       "/api/admin/applications",
@@ -299,13 +319,27 @@ export const adminApi = {
     );
     return response.data;
   },
-  getMessages: async (params?: { page?: number; pageSize?: number }) => {
+  getMessages: async (params?: {
+    page?: number;
+    pageSize?: number;
+    dateFrom?: string;
+    dateTo?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }) => {
     const response = await api.get<ApiResponse<any>>("/api/admin/messages", {
       params,
     });
     return response.data;
   },
-  getCalls: async (params?: { page?: number; pageSize?: number }) => {
+  getCalls: async (params?: {
+    page?: number;
+    pageSize?: number;
+    dateFrom?: string;
+    dateTo?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }) => {
     const response = await api.get<ApiResponse<any>>("/api/admin/calls", {
       params,
     });
@@ -315,6 +349,10 @@ export const adminApi = {
     page?: number;
     pageSize?: number;
     status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   }) => {
     const response = await api.get<ApiResponse<any>>(
       "/api/admin/subscriptions",
@@ -747,6 +785,10 @@ export const internalUsersApi = {
     page?: number;
     pageSize?: number;
     search?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   }) => {
     const response = await api.get<ApiResponse<any>>(
       "/api/admin/internal-users",

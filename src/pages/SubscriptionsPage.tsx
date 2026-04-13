@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { adminApi } from "../services/api";
 import DataTable from "../components/DataTable";
+import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import { format } from "date-fns";
 
@@ -11,10 +12,17 @@ export default function SubscriptionsPage() {
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<string>("");
+  const [tableQuery, setTableQuery] = useState<DataTableQuery>({
+    dateFrom: "",
+    dateTo: "",
+    alphabeticalOrder: "none",
+    sortBy: null,
+    sortOrder: null,
+  });
 
   useEffect(() => {
     loadSubscriptions();
-  }, [page, status]);
+  }, [page, status, tableQuery.dateFrom, tableQuery.dateTo, tableQuery.sortBy, tableQuery.sortOrder]);
 
   const loadSubscriptions = async () => {
     setLoading(true);
@@ -23,6 +31,10 @@ export default function SubscriptionsPage() {
         page,
         pageSize,
         status: status || undefined,
+        dateFrom: tableQuery.dateFrom || undefined,
+        dateTo: tableQuery.dateTo || undefined,
+        sortBy: tableQuery.sortBy || undefined,
+        sortOrder: tableQuery.sortOrder || undefined,
       });
       if (response.success && response.data) {
         setSubscriptions(response.data.items || []);
@@ -170,7 +182,16 @@ export default function SubscriptionsPage() {
         </select>
       </div>
 
-      <DataTable data={subscriptions} columns={columns} loading={loading} />
+      <DataTable
+        data={subscriptions}
+        columns={columns}
+        loading={loading}
+        serverSide
+        onQueryChange={(query) => {
+          setTableQuery(query);
+          setPage(1);
+        }}
+      />
       {!loading && total > 0 && (
         <div className="mt-4">
           <Pagination

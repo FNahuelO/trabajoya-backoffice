@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { adminApi } from "../services/api";
 import DataTable from "../components/DataTable";
+import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import { format } from "date-fns";
 import {
@@ -16,8 +17,15 @@ interface PostulantesCache {
   total: number;
 }
 
-function getCacheKeyForPage(page: number, pageSize: number): string {
-  return `postulantes_p${page}_ps${pageSize}`;
+function getCacheKeyForPage(
+  page: number,
+  pageSize: number,
+  sortBy?: string | null,
+  sortOrder?: "asc" | "desc" | null
+): string {
+  const sortKey = sortBy || "none";
+  const orderKey = sortOrder || "none";
+  return `postulantes_p${page}_ps${pageSize}_sb${sortKey}_so${orderKey}`;
 }
 
 export default function PostulantesPage() {
@@ -27,6 +35,10 @@ export default function PostulantesPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
+  const [tableQuery, setTableQuery] = useState<DataTableQuery>({
+    sortBy: null,
+    sortOrder: null,
+  });
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -37,7 +49,12 @@ export default function PostulantesPage() {
   }, []);
 
   const loadPostulantes = useCallback(async () => {
-    const cacheKey = getCacheKeyForPage(page, pageSize);
+    const cacheKey = getCacheKeyForPage(
+      page,
+      pageSize,
+      tableQuery.sortBy,
+      tableQuery.sortOrder
+    );
     const cached = getCachedData<PostulantesCache>(cacheKey);
 
     // Si hay datos en caché, mostrarlos inmediatamente
@@ -59,7 +76,12 @@ export default function PostulantesPage() {
     }
 
     try {
-      const response = await adminApi.getPostulantes({ page, pageSize });
+      const response = await adminApi.getPostulantes({
+        page,
+        pageSize,
+        sortBy: tableQuery.sortBy || undefined,
+        sortOrder: tableQuery.sortOrder || undefined,
+      });
       if (!isMounted.current) return;
 
       if (response.success && response.data) {
@@ -90,7 +112,7 @@ export default function PostulantesPage() {
         setRevalidating(false);
       }
     }
-  }, [page, pageSize]);
+  }, [page, pageSize, tableQuery.sortBy, tableQuery.sortOrder]);
 
   useEffect(() => {
     loadPostulantes();
@@ -234,7 +256,16 @@ export default function PostulantesPage() {
         )}
       </div>
 
-      <DataTable data={postulantes} columns={columns} loading={loading} />
+      <DataTable
+        data={postulantes}
+        columns={columns}
+        loading={loading}
+        serverSide
+        onQueryChange={(query) => {
+          setTableQuery(query);
+          setPage(1);
+        }}
+      />
       {!loading && total > 0 && (
         <div className="mt-4">
           <Pagination

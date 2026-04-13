@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { reportsApi } from "../services/api";
 import DataTable from "../components/DataTable";
+import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import { format } from "date-fns";
 import { Flag, CheckCircle, XCircle, Clock } from "lucide-react";
@@ -17,11 +18,18 @@ export default function ReportsPage() {
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [stats, setStats] = useState<any>(null);
+  const [tableQuery, setTableQuery] = useState<DataTableQuery>({
+    dateFrom: "",
+    dateTo: "",
+    alphabeticalOrder: "none",
+    sortBy: null,
+    sortOrder: null,
+  });
 
   useEffect(() => {
     loadReports();
     loadStats();
-  }, [page, statusFilter]);
+  }, [page, statusFilter, tableQuery.dateFrom, tableQuery.dateTo, tableQuery.sortBy, tableQuery.sortOrder]);
 
   const loadReports = async () => {
     setLoading(true);
@@ -30,6 +38,10 @@ export default function ReportsPage() {
         page,
         pageSize,
         status: statusFilter || undefined,
+        dateFrom: tableQuery.dateFrom || undefined,
+        dateTo: tableQuery.dateTo || undefined,
+        sortBy: tableQuery.sortBy || undefined,
+        sortOrder: tableQuery.sortOrder || undefined,
       });
       if (response.success && response.data) {
         setReports(response.data.reports || []);
@@ -294,7 +306,16 @@ export default function ReportsPage() {
         </select>
       </div>
 
-      <DataTable columns={columns} data={reports} loading={loading} />
+      <DataTable
+        columns={columns}
+        data={reports}
+        loading={loading}
+        serverSide
+        onQueryChange={(query) => {
+          setTableQuery(query);
+          setPage(1);
+        }}
+      />
       <Pagination
         page={page}
         pageSize={pageSize}

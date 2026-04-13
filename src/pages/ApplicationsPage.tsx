@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../services/api";
 import DataTable from "../components/DataTable";
+import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import { format } from "date-fns";
 
@@ -11,18 +12,20 @@ export default function ApplicationsPage() {
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<string>("");
+  const [tableQuery, setTableQuery] = useState<DataTableQuery>({
+    sortBy: null,
+    sortOrder: null,
+  });
 
-  useEffect(() => {
-    loadApplications();
-  }, [page, status]);
-
-  const loadApplications = async () => {
+  const loadApplications = useCallback(async () => {
     setLoading(true);
     try {
       const response = await adminApi.getApplications({
         page,
         pageSize,
         status: status || undefined,
+        sortBy: tableQuery.sortBy || undefined,
+        sortOrder: tableQuery.sortOrder || undefined,
       });
       if (response.success && response.data) {
         setApplications(response.data.items || []);
@@ -33,7 +36,11 @@ export default function ApplicationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, status, tableQuery.sortBy, tableQuery.sortOrder]);
+
+  useEffect(() => {
+    loadApplications();
+  }, [loadApplications]);
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -163,7 +170,16 @@ export default function ApplicationsPage() {
         </select>
       </div>
 
-      <DataTable data={applications} columns={columns} loading={loading} />
+      <DataTable
+        data={applications}
+        columns={columns}
+        loading={loading}
+        serverSide
+        onQueryChange={(query) => {
+          setTableQuery(query);
+          setPage(1);
+        }}
+      />
       {!loading && total > 0 && (
         <div className="mt-4">
           <Pagination
