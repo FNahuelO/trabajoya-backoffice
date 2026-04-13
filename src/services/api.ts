@@ -180,8 +180,6 @@ export const reportsApi = {
     page?: number;
     pageSize?: number;
     status?: string;
-    dateFrom?: string;
-    dateTo?: string;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
   }) => {
@@ -349,8 +347,6 @@ export const adminApi = {
     page?: number;
     pageSize?: number;
     status?: string;
-    dateFrom?: string;
-    dateTo?: string;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
   }) => {
@@ -785,8 +781,6 @@ export const internalUsersApi = {
     page?: number;
     pageSize?: number;
     search?: string;
-    dateFrom?: string;
-    dateTo?: string;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
   }) => {

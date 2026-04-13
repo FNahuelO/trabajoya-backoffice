@@ -19,9 +19,6 @@ export default function ReportsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [stats, setStats] = useState<any>(null);
   const [tableQuery, setTableQuery] = useState<DataTableQuery>({
-    dateFrom: "",
-    dateTo: "",
-    alphabeticalOrder: "none",
     sortBy: null,
     sortOrder: null,
   });
@@ -29,7 +26,7 @@ export default function ReportsPage() {
   useEffect(() => {
     loadReports();
     loadStats();
-  }, [page, statusFilter, tableQuery.dateFrom, tableQuery.dateTo, tableQuery.sortBy, tableQuery.sortOrder]);
+  }, [page, statusFilter, tableQuery.sortBy, tableQuery.sortOrder]);
 
   const loadReports = async () => {
     setLoading(true);
@@ -38,8 +35,6 @@ export default function ReportsPage() {
         page,
         pageSize,
         status: statusFilter || undefined,
-        dateFrom: tableQuery.dateFrom || undefined,
-        dateTo: tableQuery.dateTo || undefined,
         sortBy: tableQuery.sortBy || undefined,
         sortOrder: tableQuery.sortOrder || undefined,
       });

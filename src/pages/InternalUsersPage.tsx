@@ -17,9 +17,6 @@ export default function InternalUsersPage() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [tableQuery, setTableQuery] = useState<DataTableQuery>({
-    dateFrom: "",
-    dateTo: "",
-    alphabeticalOrder: "none",
     sortBy: null,
     sortOrder: null,
   });
@@ -35,7 +32,7 @@ export default function InternalUsersPage() {
 
   useEffect(() => {
     loadUsers();
-  }, [page, search, tableQuery.dateFrom, tableQuery.dateTo, tableQuery.sortBy, tableQuery.sortOrder]);
+  }, [page, search, tableQuery.sortBy, tableQuery.sortOrder]);
 
   useEffect(() => {
     loadRoles();
@@ -48,8 +45,6 @@ export default function InternalUsersPage() {
         page,
         pageSize,
         search: search || undefined,
-        dateFrom: tableQuery.dateFrom || undefined,
-        dateTo: tableQuery.dateTo || undefined,
         sortBy: tableQuery.sortBy || undefined,
         sortOrder: tableQuery.sortOrder || undefined,
       });

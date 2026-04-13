@@ -13,16 +13,13 @@ export default function SubscriptionsPage() {
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<string>("");
   const [tableQuery, setTableQuery] = useState<DataTableQuery>({
-    dateFrom: "",
-    dateTo: "",
-    alphabeticalOrder: "none",
     sortBy: null,
     sortOrder: null,
   });
 
   useEffect(() => {
     loadSubscriptions();
-  }, [page, status, tableQuery.dateFrom, tableQuery.dateTo, tableQuery.sortBy, tableQuery.sortOrder]);
+  }, [page, status, tableQuery.sortBy, tableQuery.sortOrder]);
 
   const loadSubscriptions = async () => {
     setLoading(true);
@@ -31,8 +28,6 @@ export default function SubscriptionsPage() {
         page,
         pageSize,
         status: status || undefined,
-        dateFrom: tableQuery.dateFrom || undefined,
-        dateTo: tableQuery.dateTo || undefined,
         sortBy: tableQuery.sortBy || undefined,
         sortOrder: tableQuery.sortOrder || undefined,
       });
