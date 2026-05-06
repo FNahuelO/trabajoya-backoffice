@@ -269,6 +269,12 @@ export const adminApi = {
     });
     return response.data;
   },
+  resetUserPassword: async (userId: string) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/users/${userId}/reset-password`
+    );
+    return response.data;
+  },
   getEmpresas: async (params?: {
     page?: number;
     pageSize?: number;
@@ -302,6 +308,12 @@ export const adminApi = {
     const response = await api.get<ApiResponse<any>>("/api/admin/jobs/all", {
       params,
     });
+    return response.data;
+  },
+  markJobAsPaid: async (jobId: string) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/jobs/${jobId}/mark-paid`
+    );
     return response.data;
   },
   getApplications: async (params?: {

@@ -117,6 +117,31 @@ export default function JobsPage() {
     }
   };
 
+  const handleMarkAsPaid = async (id: string) => {
+    showConfirm({
+      title: "Confirmar cambio",
+      message: "¿Querés marcar este trabajo como pagado?",
+      confirmText: "Sí, marcar",
+      cancelText: "Cancelar",
+      onConfirm: async () => {
+        try {
+          await adminApi.markJobAsPaid(id);
+          setSelectedJob(null);
+          reloadJobs();
+          showAlert({
+            title: "Éxito",
+            message: "Trabajo marcado como pagado correctamente",
+          });
+        } catch (error) {
+          showAlert({
+            title: "Error",
+            message: "No se pudo marcar el trabajo como pagado",
+          });
+        }
+      },
+    });
+  };
+
   const columns = [
     {
       key: "title",
@@ -210,6 +235,9 @@ export default function JobsPage() {
         visible={!!selectedJob}
         job={selectedJob}
         onClose={() => setSelectedJob(null)}
+        onMarkAsPaid={(id) => {
+          handleMarkAsPaid(id);
+        }}
         onApprove={(id) => {
           setSelectedJob(null);
           handleApprove(id);

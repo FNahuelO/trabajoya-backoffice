@@ -21,6 +21,7 @@ interface JobDetailModalProps {
   onClose: () => void;
   onApprove?: (id: string) => void;
   onReject?: (id: string, reason: string) => void;
+  onMarkAsPaid?: (id: string) => void;
 }
 
 export default function JobDetailModal({
@@ -29,6 +30,7 @@ export default function JobDetailModal({
   onClose,
   onApprove,
   onReject,
+  onMarkAsPaid,
 }: JobDetailModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [showRejectForm, setShowRejectForm] = useState(false);
@@ -145,6 +147,7 @@ export default function JobDetailModal({
     job.moderationStatus === "PENDING_PAYMENT";
 
   const applicationsCount = job.applications?.length || 0;
+  const canMarkAsPaid = !job.isPaid || job.paymentStatus !== "COMPLETED";
 
   return (
     <div
@@ -332,6 +335,14 @@ export default function JobDetailModal({
               </div>
             ) : (
               <div className="flex items-center justify-center gap-3">
+                {canMarkAsPaid && onMarkAsPaid && (
+                  <button
+                    onClick={() => onMarkAsPaid(job.id)}
+                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                  >
+                    Marcar como pagado
+                  </button>
+                )}
                 {isPending && onApprove && (
                   <button
                     onClick={() => onApprove(job.id)}

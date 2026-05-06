@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../services/api";
+import { useAlert } from "../hooks/useAlert";
 import DataTable from "../components/DataTable";
 import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
@@ -7,6 +8,7 @@ import { format } from "date-fns";
 import type { User } from "../types";
 
 export default function UsersPage() {
+  const { showAlert, showConfirm, AlertComponent } = useAlert();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -42,6 +44,46 @@ export default function UsersPage() {
   useEffect(() => {
     loadUsers();
   }, [loadUsers]);
+
+  const handleResetPassword = (user: User) => {
+    showConfirm({
+      title: "Resetear contraseña",
+      message: `¿Querés resetear la contraseña de ${user.email}?`,
+      confirmText: "Resetear",
+      cancelText: "Cancelar",
+      onConfirm: async () => {
+        try {
+          const response = await adminApi.resetUserPassword(user.id);
+          const temporaryPassword = response?.data?.temporaryPassword;
+          showConfirm({
+            title: "Contraseña temporal generada",
+            message: `Usuario: ${user.email}\nNueva contraseña temporal: ${temporaryPassword}\n\n¿Querés copiarla al portapapeles?`,
+            confirmText: "Copiar",
+            cancelText: "Cerrar",
+            onConfirm: async () => {
+              try {
+                await navigator.clipboard.writeText(String(temporaryPassword || ""));
+                showAlert({
+                  title: "Copiado",
+                  message: "La contraseña temporal fue copiada al portapapeles.",
+                });
+              } catch (copyError) {
+                showAlert({
+                  title: "Error",
+                  message: "No se pudo copiar la contraseña automáticamente.",
+                });
+              }
+            },
+          });
+        } catch (error) {
+          showAlert({
+            title: "Error",
+            message: "No se pudo resetear la contraseña del usuario",
+          });
+        }
+      },
+    });
+  };
 
   const columns = [
     {
@@ -81,6 +123,22 @@ export default function UsersPage() {
       key: "createdAt",
       header: "Fecha Creación",
       render: (user: User) => format(new Date(user.createdAt), "dd/MM/yyyy"),
+    },
+    {
+      key: "actions",
+      header: "Acciones",
+      sortable: false,
+      render: (user: User) => (
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            handleResetPassword(user);
+          }}
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors"
+        >
+          Resetear contraseña
+        </button>
+      ),
     },
   ];
 
@@ -122,6 +180,7 @@ export default function UsersPage() {
           />
         </div>
       )}
+      <AlertComponent />
     </div>
   );
 }
