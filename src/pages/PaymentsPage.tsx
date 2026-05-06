@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { paymentsApi } from "../services/api";
+import { backofficeAuth, paymentsApi } from "../services/api";
 import type { PaymentTransaction, PaymentStats, PaginatedResponse } from "../types";
 import {
   CreditCard,
@@ -70,6 +70,8 @@ const MethodIcon = ({ method }: { method: string }) => {
 };
 
 export default function PaymentsPage() {
+  const session = backofficeAuth.getSession();
+  const canViewPayments = session.canViewPayments;
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
   const [stats, setStats] = useState<PaymentStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -168,6 +170,14 @@ export default function PaymentsPage() {
   };
 
   const hasActiveFilters = statusFilter || methodFilter || search || dateFrom || dateTo;
+
+  if (!canViewPayments) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+        Esta sección está disponible solo para Super Admin.
+      </div>
+    );
+  }
 
   return (
     <div>

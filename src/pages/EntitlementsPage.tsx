@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { entitlementsApi } from "../services/api";
+import { backofficeAuth, entitlementsApi } from "../services/api";
 import type { JobPostEntitlement, PaginatedResponse } from "../types";
 import {
   Key,
@@ -44,6 +44,8 @@ const sourceIcons: Record<string, typeof Apple> = {
 };
 
 export default function EntitlementsPage() {
+  const session = backofficeAuth.getSession();
+  const canViewEntitlements = session.canViewEntitlements;
   const [entitlements, setEntitlements] = useState<JobPostEntitlement[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -84,6 +86,14 @@ export default function EntitlementsPage() {
   const isExpired = (expiresAt: string) => {
     return new Date(expiresAt) < new Date();
   };
+
+  if (!canViewEntitlements) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+        Esta sección está disponible solo para Super Admin.
+      </div>
+    );
+  }
 
   return (
     <div>

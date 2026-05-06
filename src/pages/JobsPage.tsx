@@ -1,24 +1,29 @@
 import { useEffect, useState } from "react";
-import { adminApi, moderationApi } from "../services/api";
+import { adminApi, backofficeAuth, moderationApi } from "../services/api";
 import { useAlert } from "../hooks/useAlert";
 import DataTable from "../components/DataTable";
 import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import JobDetailModal from "../components/JobDetailModal";
 import { format } from "date-fns";
-import { Filter } from "lucide-react";
+import { Filter, Search, X } from "lucide-react";
 import type { Job } from "../types";
 
 type ModerationFilter = "ALL" | "PENDING" | "APPROVED" | "REJECTED" | "AUTO_REJECTED" | "PENDING_PAYMENT";
 
 export default function JobsPage() {
   const { showAlert, showConfirm, AlertComponent } = useAlert();
+  const session = backofficeAuth.getSession();
+  const canViewJobs = session.canViewJobs;
+  const canModerateJobs = session.canModerateJobs;
+  const canMarkJobsAsPaid = session.canMarkJobsAsPaid;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [filter, setFilter] = useState<ModerationFilter>("ALL");
+  const [search, setSearch] = useState("");
   const [tableQuery, setTableQuery] = useState<DataTableQuery>({
     sortBy: null,
     sortOrder: null,
@@ -30,7 +35,13 @@ export default function JobsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [filter]);
+  }, [filter, search]);
+
+  useEffect(() => {
+    if (filter === "PENDING" && !canModerateJobs) {
+      setFilter("ALL");
+    }
+  }, [canModerateJobs, filter]);
 
   useEffect(() => {
     if (filter === "PENDING") {
@@ -38,7 +49,7 @@ export default function JobsPage() {
     } else {
       loadJobs();
     }
-  }, [page, filter, tableQuery.sortBy, tableQuery.sortOrder]);
+  }, [page, filter, search, tableQuery.sortBy, tableQuery.sortOrder]);
 
   const loadJobs = async () => {
     setLoading(true);
@@ -46,6 +57,9 @@ export default function JobsPage() {
       const params: any = { page, pageSize };
       if (filter !== "ALL") {
         params.moderationStatus = filter;
+      }
+      if (search.trim()) {
+        params.search = search.trim();
       }
       params.sortBy = tableQuery.sortBy || undefined;
       params.sortOrder = tableQuery.sortOrder || undefined;
@@ -174,42 +188,85 @@ export default function JobsPage() {
 
   const filterOptions: { value: ModerationFilter; label: string }[] = [
     { value: "ALL", label: "Todos" },
-    { value: "PENDING", label: "Pendientes" },
+    ...(canModerateJobs ? [{ value: "PENDING" as const, label: "Pendientes" }] : []),
     { value: "APPROVED", label: "Aprobados" },
     { value: "REJECTED", label: "Rechazados" },
     { value: "AUTO_REJECTED", label: "Auto Rechazados" },
     { value: "PENDING_PAYMENT", label: "Pendiente Pago" },
   ];
 
+  if (!canViewJobs) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+        No tenés permisos para ver trabajos.
+      </div>
+    );
+  }
+
+  const searchTerm = search.trim().toLowerCase();
+  const displayedJobs =
+    filter === "PENDING" && searchTerm
+      ? jobs.filter((job) => {
+          const title = job.title?.toLowerCase() || "";
+          const companyName = job.empresa?.companyName?.toLowerCase() || "";
+          return title.includes(searchTerm) || companyName.includes(searchTerm);
+        })
+      : jobs;
+
+  const displayedTotal = filter === "PENDING" && searchTerm ? displayedJobs.length : total;
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold text-gray-900">Trabajos</h1>
 
-        <div className="flex items-center gap-2">
-          <Filter className="h-5 w-5 text-gray-500" />
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as ModerationFilter)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-          >
-            {filterOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-80">
+            <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por empresa o título"
+              className="w-full pl-9 pr-9 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5 text-gray-500" />
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value as ModerationFilter)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              {filterOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {filter === "PENDING" && jobs.length > 0 && (
+      {canModerateJobs && filter === "PENDING" && jobs.length > 0 && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
           Estos trabajos requieren moderación. Podés aprobar o rechazar cada uno desde las acciones.
         </div>
       )}
 
       <DataTable
-        data={jobs}
+        data={displayedJobs}
         columns={columns}
         loading={loading}
         onRowClick={(job) => setSelectedJob(job)}
@@ -219,12 +276,12 @@ export default function JobsPage() {
           setPage(1);
         }}
       />
-      {!loading && total > 0 && (
+      {!loading && displayedTotal > 0 && (
         <div className="mt-4">
           <Pagination
             page={page}
             pageSize={pageSize}
-            total={total}
+            total={displayedTotal}
             onPageChange={setPage}
           />
         </div>
@@ -235,16 +292,28 @@ export default function JobsPage() {
         visible={!!selectedJob}
         job={selectedJob}
         onClose={() => setSelectedJob(null)}
-        onMarkAsPaid={(id) => {
-          handleMarkAsPaid(id);
-        }}
-        onApprove={(id) => {
-          setSelectedJob(null);
-          handleApprove(id);
-        }}
-        onReject={(id, reason) => {
-          handleReject(id, reason);
-        }}
+        onMarkAsPaid={
+          canMarkJobsAsPaid
+            ? (id) => {
+                handleMarkAsPaid(id);
+              }
+            : undefined
+        }
+        onApprove={
+          canModerateJobs
+            ? (id) => {
+                setSelectedJob(null);
+                handleApprove(id);
+              }
+            : undefined
+        }
+        onReject={
+          canModerateJobs
+            ? (id, reason) => {
+                handleReject(id, reason);
+              }
+            : undefined
+        }
       />
 
       <AlertComponent />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { adminApi } from "../services/api";
+import { adminApi, backofficeAuth } from "../services/api";
 import {
   Users,
   Building2,
@@ -37,6 +37,7 @@ interface Stats {
 }
 
 export default function Dashboard() {
+  const session = backofficeAuth.getSession();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -80,6 +81,7 @@ export default function Dashboard() {
       icon: Users,
       color: "bg-blue-500",
       link: "/users",
+      visible: session.canViewUsers,
     },
     {
       title: "Empresas",
@@ -101,6 +103,7 @@ export default function Dashboard() {
       icon: Briefcase,
       color: "bg-orange-500",
       link: "/jobs",
+      visible: session.canViewJobs,
     },
     {
       title: "Trabajos Activos",
@@ -108,6 +111,7 @@ export default function Dashboard() {
       icon: CheckCircle,
       color: "bg-green-500",
       link: "/jobs?status=active",
+      visible: session.canViewJobs,
     },
     {
       title: "Aplicaciones",
@@ -122,6 +126,7 @@ export default function Dashboard() {
       icon: DollarSign,
       color: "bg-emerald-500",
       link: "/payments",
+      visible: session.canViewPayments,
     },
     {
       title: "Promociones Usadas",
@@ -137,6 +142,7 @@ export default function Dashboard() {
       icon: Flag,
       color: "bg-rose-500",
       link: "/reports",
+      visible: session.canViewReports,
     },
     {
       title: "Opciones",
@@ -152,7 +158,7 @@ export default function Dashboard() {
       color: "bg-blue-500",
       link: "/terms",
     },
-  ];
+  ].filter((card) => card.visible ?? true);
 
   return (
     <div>

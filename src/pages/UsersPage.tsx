@@ -1,20 +1,25 @@
 import { useCallback, useEffect, useState } from "react";
-import { adminApi } from "../services/api";
+import { adminApi, backofficeAuth } from "../services/api";
 import { useAlert } from "../hooks/useAlert";
 import DataTable from "../components/DataTable";
 import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
 import { format } from "date-fns";
+import { Search, X } from "lucide-react";
 import type { User } from "../types";
 
 export default function UsersPage() {
   const { showAlert, showConfirm, AlertComponent } = useAlert();
+  const session = backofficeAuth.getSession();
+  const canViewUsers = session.canViewUsers;
+  const canResetPasswords = session.canResetUserPasswords;
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [userType, setUserType] = useState<string>("");
+  const [search, setSearch] = useState("");
   const [tableQuery, setTableQuery] = useState<DataTableQuery>({
     sortBy: null,
     sortOrder: null,
@@ -27,6 +32,7 @@ export default function UsersPage() {
         page,
         pageSize,
         userType: userType || undefined,
+        search: search.trim() || undefined,
         sortBy: tableQuery.sortBy || undefined,
         sortOrder: tableQuery.sortOrder || undefined,
       });
@@ -39,7 +45,7 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, tableQuery.sortBy, tableQuery.sortOrder, userType]);
+  }, [page, pageSize, search, tableQuery.sortBy, tableQuery.sortOrder, userType]);
 
   useEffect(() => {
     loadUsers();
@@ -124,40 +130,81 @@ export default function UsersPage() {
       header: "Fecha Creación",
       render: (user: User) => format(new Date(user.createdAt), "dd/MM/yyyy"),
     },
-    {
-      key: "actions",
-      header: "Acciones",
-      sortable: false,
-      render: (user: User) => (
-        <button
-          onClick={(event) => {
-            event.stopPropagation();
-            handleResetPassword(user);
-          }}
-          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors"
-        >
-          Resetear contraseña
-        </button>
-      ),
-    },
+    ...(canResetPasswords
+      ? [
+          {
+            key: "actions",
+            header: "Acciones",
+            sortable: false,
+            render: (user: User) => (
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleResetPassword(user);
+                }}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors"
+              >
+                Resetear contraseña
+              </button>
+            ),
+          },
+        ]
+      : []),
   ];
+
+  if (!canViewUsers) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+        No tenés permisos para ver usuarios.
+      </div>
+    );
+  }
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
         <h1 className="text-3xl font-bold text-gray-900">Usuarios</h1>
-        <select
-          value={userType}
-          onChange={(e) => {
-            setUserType(e.target.value);
-            setPage(1);
-          }}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Todos los tipos</option>
-          <option value="POSTULANTE">Postulantes</option>
-          <option value="EMPRESA">Empresas</option>
-        </select>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-80">
+            <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Buscar por email, empresa o postulante"
+              className="w-full pl-9 pr-9 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setPage(1);
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          <select
+            value={userType}
+            onChange={(e) => {
+              setUserType(e.target.value);
+              setPage(1);
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Todos los tipos</option>
+            <option value="POSTULANTE">Postulantes</option>
+            <option value="EMPRESA">Empresas</option>
+          </select>
+        </div>
       </div>
 
       <DataTable

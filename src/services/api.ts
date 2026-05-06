@@ -10,6 +10,160 @@ const api = axios.create({
   },
 });
 
+type JwtPayload = {
+  role?: string;
+  userType?: string;
+  permissions?: string[] | string;
+};
+
+type BackofficeSession = {
+  role: string | null;
+  userType: string | null;
+  permissions: string[];
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  canViewUsers: boolean;
+  canManageUsers: boolean;
+  canViewJobs: boolean;
+  canModerateJobs: boolean;
+  canMarkJobsAsPaid: boolean;
+  canResetUserPasswords: boolean;
+  canViewReports: boolean;
+  canManageRoles: boolean;
+  canManageInternalUsers: boolean;
+  canCreateInternalUsers: boolean;
+  canViewPayments: boolean;
+  canViewEntitlements: boolean;
+};
+
+const ADMIN_USER_TYPE = "ADMIN";
+const MODERATOR_ROLES = new Set(["MODERADOR", "MODERATOR"]);
+const FULL_ACCESS_ROLES = new Set(["ADMIN", "SUPER_ADMIN", "SUPERADMIN"]);
+const SUPER_ADMIN_ROLES = new Set(["SUPER_ADMIN", "SUPERADMIN"]);
+const INTERNAL_USER_CREATOR_ROLES = new Set([
+  "ADMIN",
+  "SUPER_ADMIN",
+  "SUPERADMIN",
+  "MODERADOR",
+  "MODERATOR",
+]);
+
+const hasAnyPermission = (
+  permissions: string[],
+  requiredPermissions: string[]
+): boolean => {
+  return requiredPermissions.some((required) =>
+    permissions.includes(required.toUpperCase())
+  );
+};
+
+const decodeJwtPayload = (token: string): JwtPayload | null => {
+  try {
+    const [, payloadPart] = token.split(".");
+    if (!payloadPart) return null;
+    const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
+        .join("")
+    );
+    return JSON.parse(json) as JwtPayload;
+  } catch (_error) {
+    return null;
+  }
+};
+
+export const backofficeAuth = {
+  getSession: (): BackofficeSession => {
+    const token = localStorage.getItem("token");
+    const payload = token ? decodeJwtPayload(token) : null;
+    const role = (payload?.role || null)?.toUpperCase?.() || null;
+    const userType = (payload?.userType || null)?.toUpperCase?.() || null;
+    const permissions = Array.isArray(payload?.permissions)
+      ? payload.permissions.map((permission) => permission.toUpperCase())
+      : typeof payload?.permissions === "string"
+      ? payload.permissions
+          .split(" ")
+          .map((permission) => permission.trim().toUpperCase())
+          .filter(Boolean)
+      : [];
+    const isAdmin =
+      role === ADMIN_USER_TYPE || userType === ADMIN_USER_TYPE;
+    const isSuperAdmin = SUPER_ADMIN_ROLES.has(role || "");
+    const hasFullAccessRole = FULL_ACCESS_ROLES.has(role || "");
+    const canModerateByRole = MODERATOR_ROLES.has(role || "");
+    const canMarkPaidByRole = MODERATOR_ROLES.has(role || "");
+    const canViewUsersByPermission = hasAnyPermission(permissions, [
+      "USERS:READ",
+      "USERS:WRITE",
+    ]);
+    const canManageUsersByPermission = hasAnyPermission(permissions, [
+      "USERS:WRITE",
+      "USERS:RESET_PASSWORD",
+    ]);
+    const canViewJobsByPermission = hasAnyPermission(permissions, [
+      "JOBS:READ",
+      "JOBS:WRITE",
+      "MODERATION:READ",
+      "MODERATION:WRITE",
+    ]);
+    const canModerateByPermission = hasAnyPermission(permissions, [
+      "JOBS:MODERATE",
+      "JOBS:APPROVE",
+      "JOBS:REJECT",
+      "MODERATION:WRITE",
+    ]);
+    const canMarkPaidByPermission = hasAnyPermission(permissions, [
+      "JOBS:MARK_PAID",
+      "BILLING:WRITE",
+      "PAYMENTS:WRITE",
+    ]);
+    const canViewReportsByPermission = hasAnyPermission(permissions, [
+      "REPORTS:READ",
+      "REPORTS:WRITE",
+    ]);
+    const canManageRolesByPermission = hasAnyPermission(permissions, [
+      "ROLES:WRITE",
+      "ROLES:MANAGE",
+    ]);
+    const canManageInternalUsersByPermission = hasAnyPermission(permissions, [
+      "INTERNAL_USERS:WRITE",
+      "USERS:WRITE",
+    ]);
+    const canResetPasswordsByPermission = hasAnyPermission(permissions, [
+      "USERS:RESET_PASSWORD",
+      "USERS:WRITE",
+    ]);
+
+    return {
+      role,
+      userType,
+      permissions,
+      isAdmin,
+      isSuperAdmin,
+      canViewUsers: isAdmin && (hasFullAccessRole || canViewUsersByPermission),
+      canManageUsers: isAdmin && (hasFullAccessRole || canManageUsersByPermission),
+      canViewJobs: isAdmin && (hasFullAccessRole || canViewJobsByPermission),
+      canModerateJobs:
+        isAdmin &&
+        (hasFullAccessRole || canModerateByRole || canModerateByPermission),
+      canMarkJobsAsPaid:
+        isAdmin && (hasFullAccessRole || canMarkPaidByRole || canMarkPaidByPermission),
+      canResetUserPasswords:
+        isAdmin && (hasFullAccessRole || canResetPasswordsByPermission),
+      canViewReports: isAdmin && (hasFullAccessRole || canViewReportsByPermission),
+      canManageRoles: isAdmin && (hasFullAccessRole || canManageRolesByPermission),
+      canManageInternalUsers:
+        isAdmin && (hasFullAccessRole || canManageInternalUsersByPermission),
+      canCreateInternalUsers:
+        isAdmin && INTERNAL_USER_CREATOR_ROLES.has(role || ""),
+      canViewPayments: isSuperAdmin,
+      canViewEntitlements: isSuperAdmin,
+    };
+  },
+};
+
 // Interceptor para agregar el token de autenticación
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -261,6 +415,7 @@ export const adminApi = {
     page?: number;
     pageSize?: number;
     userType?: string;
+    search?: string;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
   }) => {
@@ -302,6 +457,7 @@ export const adminApi = {
     pageSize?: number;
     status?: string;
     moderationStatus?: string;
+    search?: string;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
   }) => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { internalUsersApi, rolesApi } from "../services/api";
+import { backofficeAuth, internalUsersApi, rolesApi } from "../services/api";
 import DataTable from "../components/DataTable";
 import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
@@ -8,6 +8,9 @@ import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import type { InternalUser, Role } from "../types";
 
 export default function InternalUsersPage() {
+  const session = backofficeAuth.getSession();
+  const canManageInternalUsers = session.canManageInternalUsers;
+  const canCreateInternalUsers = session.canCreateInternalUsers;
   const [users, setUsers] = useState<InternalUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +74,9 @@ export default function InternalUsersPage() {
   };
 
   const openCreateModal = () => {
+    if (!canCreateInternalUsers) {
+      return;
+    }
     setEditingUser(null);
     setFormEmail("");
     setFormPassword("");
@@ -226,19 +232,29 @@ export default function InternalUsersPage() {
     },
   ];
 
+  if (!canManageInternalUsers) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+        No tenés permisos para gestionar usuarios internos.
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">
           Usuarios Internos
         </h1>
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Nuevo Usuario
-        </button>
+        {canCreateInternalUsers && (
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Nuevo Usuario
+          </button>
+        )}
       </div>
 
       {/* Barra de búsqueda */}

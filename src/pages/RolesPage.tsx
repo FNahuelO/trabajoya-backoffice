@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { rolesApi } from "../services/api";
+import { backofficeAuth, rolesApi } from "../services/api";
 import { format } from "date-fns";
 import { Plus, Pencil, Trash2, Shield, ChevronDown, ChevronUp } from "lucide-react";
 import type { Role } from "../types";
 import { AVAILABLE_PERMISSIONS } from "../types";
 
 export default function RolesPage() {
+  const session = backofficeAuth.getSession();
+  const canManageRoles = session.canManageRoles;
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -170,6 +172,14 @@ export default function RolesPage() {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!canManageRoles) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+        No tenés permisos para gestionar roles.
       </div>
     );
   }
