@@ -20,6 +20,7 @@ import {
   Key,
   Shield,
   UserCog,
+  Bell,
 } from "lucide-react";
 
 interface LayoutProps {
@@ -35,6 +36,7 @@ const menuItems = [
   { path: "/applications", icon: FileText, label: "Aplicaciones" },
   { path: "/payments", icon: DollarSign, label: "Pagos" },
   { path: "/promotions", icon: Gift, label: "Promociones" },
+  { path: "/notification-campaigns", icon: Bell, label: "Notificaciones" },
   { path: "/entitlements", icon: Key, label: "Entitlements" },
   { path: "/terms", icon: FileCheck, label: "Términos y Condiciones" },
   { path: "/catalogs", icon: BookOpen, label: "Catálogos y Opciones" },

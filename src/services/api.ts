@@ -1119,4 +1119,43 @@ export const entitlementsApi = {
   },
 };
 
+export const notificationCampaignsApi = {
+  list: async (params?: { page?: number; pageSize?: number }) => {
+    const response = await api.get<ApiResponse<any>>(
+      "/api/admin/notification-campaigns",
+      { params }
+    );
+    return response.data;
+  },
+  getAudienceStats: async () => {
+    const response = await api.get<ApiResponse<any>>(
+      "/api/admin/notification-campaigns/audience-stats"
+    );
+    return response.data;
+  },
+  previewReach: async (userIds: string[]) => {
+    const response = await api.get<ApiResponse<any>>(
+      "/api/admin/notification-campaigns/preview-reach",
+      {
+        params: {
+          userIds: userIds.join(","),
+        },
+      }
+    );
+    return response.data;
+  },
+  send: async (data: {
+    title: string;
+    body: string;
+    targetAudience: "ALL" | "POSTULANTE" | "EMPRESA" | "SPECIFIC";
+    userIds?: string[];
+  }) => {
+    const response = await api.post<ApiResponse<any>>(
+      "/api/admin/notification-campaigns/send",
+      data
+    );
+    return response.data;
+  },
+};
+
 export default api;
