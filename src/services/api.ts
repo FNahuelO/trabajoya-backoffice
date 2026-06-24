@@ -1156,6 +1156,68 @@ export const notificationCampaignsApi = {
     );
     return response.data;
   },
+  listSchedules: async (params?: { page?: number; pageSize?: number }) => {
+    const response = await api.get<ApiResponse<any>>(
+      "/api/admin/notification-campaigns/schedules",
+      { params }
+    );
+    return response.data;
+  },
+  schedule: async (data: {
+    title: string;
+    body: string;
+    targetAudience: "ALL" | "POSTULANTE" | "EMPRESA" | "SPECIFIC";
+    userIds?: string[];
+    scheduleType: "ONCE" | "RECURRING";
+    scheduledAt?: string;
+    recurrenceDays?: number[];
+    recurrenceTime?: string;
+    timezone?: string;
+    maxRuns?: number;
+  }) => {
+    const response = await api.post<ApiResponse<any>>(
+      "/api/admin/notification-campaigns/schedule",
+      data
+    );
+    return response.data;
+  },
+  updateSchedule: async (
+    id: string,
+    data: {
+      title: string;
+      body: string;
+      targetAudience: "ALL" | "POSTULANTE" | "EMPRESA" | "SPECIFIC";
+      userIds?: string[];
+      scheduleType: "ONCE" | "RECURRING";
+      scheduledAt?: string;
+      recurrenceDays?: number[];
+      recurrenceTime?: string;
+      timezone?: string;
+      maxRuns?: number;
+    }
+  ) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/notification-campaigns/schedules/${id}`,
+      data
+    );
+    return response.data;
+  },
+  updateScheduleStatus: async (
+    id: string,
+    status: "ACTIVE" | "PAUSED"
+  ) => {
+    const response = await api.patch<ApiResponse<any>>(
+      `/api/admin/notification-campaigns/schedules/${id}/status`,
+      { status }
+    );
+    return response.data;
+  },
+  deleteSchedule: async (id: string) => {
+    const response = await api.delete<ApiResponse<any>>(
+      `/api/admin/notification-campaigns/schedules/${id}`
+    );
+    return response.data;
+  },
 };
 
 export default api;
