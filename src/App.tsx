@@ -24,6 +24,7 @@ import EntitlementsPage from "./pages/EntitlementsPage";
 import RolesPage from "./pages/RolesPage";
 import InternalUsersPage from "./pages/InternalUsersPage";
 import NotificationCampaignsPage from "./pages/NotificationCampaignsPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
@@ -76,6 +77,7 @@ function AppRoutes() {
                 <Route path="/entitlements" element={<EntitlementsPage />} />
                 <Route path="/roles" element={<RolesPage />} />
                 <Route path="/internal-users" element={<InternalUsersPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </Layout>
           </ProtectedRoute>

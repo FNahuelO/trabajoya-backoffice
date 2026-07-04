@@ -1220,4 +1220,29 @@ export const notificationCampaignsApi = {
   },
 };
 
+// Settings API (configuración editable de la app)
+export interface SupportConfig {
+  whatsappNumber: string;
+  email: string;
+}
+
+export const settingsApi = {
+  getSupport: async () => {
+    const response = await api.get<ApiResponse<SupportConfig>>(
+      "/api/admin/settings/support"
+    );
+    return response.data;
+  },
+  updateSupport: async (data: {
+    whatsappNumber?: string;
+    email?: string;
+  }) => {
+    const response = await api.patch<ApiResponse<SupportConfig>>(
+      "/api/admin/settings/support",
+      data
+    );
+    return response.data;
+  },
+};
+
 export default api;

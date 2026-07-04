@@ -21,6 +21,7 @@ import {
   Shield,
   UserCog,
   Bell,
+  Settings,
 } from "lucide-react";
 
 interface LayoutProps {
@@ -44,6 +45,7 @@ const menuItems = [
   { path: "/reports", icon: Flag, label: "Denuncias" },
   { path: "/internal-users", icon: UserCog, label: "Usuarios Internos", separator: true },
   { path: "/roles", icon: Shield, label: "Roles" },
+  { path: "/settings", icon: Settings, label: "Configuración" },
 ];
 
 export default function Layout({ children }: LayoutProps) {
