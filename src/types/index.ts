@@ -174,6 +174,7 @@ export interface Job {
   moderatedBy?: string;
   moderatedAt?: string;
   autoRejectionReason?: string;
+  contactPhone?: string | null;
   // Payment fields
   isPaid?: boolean;
   paymentOrderId?: string;

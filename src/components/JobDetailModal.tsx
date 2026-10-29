@@ -9,6 +9,7 @@ import {
   GraduationCap,
   CheckCircle,
   XCircle,
+  Phone,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -145,6 +146,8 @@ export default function JobDetailModal({
   const isPending =
     job.moderationStatus === "PENDING" ||
     job.moderationStatus === "PENDING_PAYMENT";
+  const isAutoRejected = job.moderationStatus === "AUTO_REJECTED";
+  const canApprove = isPending || isAutoRejected;
 
   const applicationsCount = job.applications?.length || 0;
   const canMarkAsPaid = !job.isPaid || job.paymentStatus !== "COMPLETED";
@@ -231,6 +234,21 @@ export default function JobDetailModal({
               </span>
             </div>
 
+            {job.contactPhone && (
+              <div className="flex items-center gap-3">
+                <Phone className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                <span className="text-sm text-gray-700">
+                  Teléfono para recibir CVs:{" "}
+                  <a
+                    href={`tel:${job.contactPhone}`}
+                    className="font-medium text-blue-600 hover:underline"
+                  >
+                    {job.contactPhone}
+                  </a>
+                </span>
+              </div>
+            )}
+
            
           </div>
 
@@ -269,6 +287,12 @@ export default function JobDetailModal({
                 </p>
               </div>
             )}
+
+          {isAutoRejected && onApprove && !job.isPaid && (
+            <div className="mb-5 rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
+              Este aviso no está pago. Si lo aprobás, se publica sin cobrar.
+            </div>
+          )}
 
           {/* Info de moderación */}
           {job.moderatedAt && (
@@ -343,7 +367,7 @@ export default function JobDetailModal({
                     Marcar como pagado
                   </button>
                 )}
-                {isPending && onApprove && (
+                {canApprove && onApprove && (
                   <button
                     onClick={() => onApprove(job.id)}
                     className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
