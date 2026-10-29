@@ -3,7 +3,38 @@ import { adminApi } from "../services/api";
 import DataTable from "../components/DataTable";
 import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
+import {
+  DateFilter,
+  FiltersPanel,
+  SearchFilter,
+  SelectFilter,
+  TextFilter,
+  YES_NO_OPTIONS,
+} from "../components/Filters";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { format } from "date-fns";
+
+interface EmpresasFilters {
+  search: string;
+  provincia: string;
+  verified: string;
+  hasActiveSubscription: string;
+  createdFrom: string;
+  createdTo: string;
+}
+
+const EMPTY_FILTERS: EmpresasFilters = {
+  search: "",
+  provincia: "",
+  verified: "",
+  hasActiveSubscription: "",
+  createdFrom: "",
+  createdTo: "",
+};
+
+function toParam(value: string): string | undefined {
+  return value.trim() || undefined;
+}
 
 export default function EmpresasPage() {
   const [empresas, setEmpresas] = useState<any[]>([]);
@@ -15,6 +46,14 @@ export default function EmpresasPage() {
     sortBy: null,
     sortOrder: null,
   });
+  const [filters, setFilters] = useState<EmpresasFilters>(EMPTY_FILTERS);
+  const debouncedFilters = useDebouncedValue(filters);
+  const hasActiveFilters = Object.values(filters).some((value) => value.trim());
+
+  const updateFilter = (key: keyof EmpresasFilters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
 
   const loadEmpresas = useCallback(async () => {
     setLoading(true);
@@ -24,6 +63,12 @@ export default function EmpresasPage() {
         pageSize,
         sortBy: tableQuery.sortBy || undefined,
         sortOrder: tableQuery.sortOrder || undefined,
+        search: toParam(debouncedFilters.search),
+        provincia: toParam(debouncedFilters.provincia),
+        verified: toParam(debouncedFilters.verified),
+        hasActiveSubscription: toParam(debouncedFilters.hasActiveSubscription),
+        createdFrom: toParam(debouncedFilters.createdFrom),
+        createdTo: toParam(debouncedFilters.createdTo),
       });
       if (response.success && response.data) {
         setEmpresas(response.data.items || []);
@@ -34,7 +79,7 @@ export default function EmpresasPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, tableQuery.sortBy, tableQuery.sortOrder]);
+  }, [page, pageSize, tableQuery.sortBy, tableQuery.sortOrder, debouncedFilters]);
 
   useEffect(() => {
     loadEmpresas();
@@ -146,7 +191,57 @@ export default function EmpresasPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Empresas</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Empresas</h1>
+        {!loading && (
+          <span className="text-sm text-gray-500">{total} resultados</span>
+        )}
+      </div>
+
+      <FiltersPanel
+        hasActiveFilters={hasActiveFilters}
+        onClear={() => {
+          setFilters(EMPTY_FILTERS);
+          setPage(1);
+        }}
+      >
+        <SearchFilter
+          className="sm:col-span-2"
+          value={filters.search}
+          onChange={(value) => updateFilter("search", value)}
+          placeholder="Nombre, razón social, CUIT, email, teléfono o contacto"
+        />
+        <TextFilter
+          label="Provincia"
+          value={filters.provincia}
+          onChange={(value) => updateFilter("provincia", value)}
+          placeholder="Ej: Buenos Aires"
+        />
+        <SelectFilter
+          label="Verificada"
+          value={filters.verified}
+          onChange={(value) => updateFilter("verified", value)}
+          options={YES_NO_OPTIONS}
+          allLabel="Todas"
+        />
+        <SelectFilter
+          label="Suscripción activa"
+          value={filters.hasActiveSubscription}
+          onChange={(value) => updateFilter("hasActiveSubscription", value)}
+          options={YES_NO_OPTIONS}
+          allLabel="Todas"
+        />
+        <DateFilter
+          label="Registrada desde"
+          value={filters.createdFrom}
+          onChange={(value) => updateFilter("createdFrom", value)}
+        />
+        <DateFilter
+          label="Registrada hasta"
+          value={filters.createdTo}
+          onChange={(value) => updateFilter("createdTo", value)}
+        />
+      </FiltersPanel>
 
       <DataTable
         data={empresas}

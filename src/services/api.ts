@@ -435,6 +435,12 @@ export const adminApi = {
     pageSize?: number;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
+    search?: string;
+    provincia?: string;
+    verified?: string;
+    hasActiveSubscription?: string;
+    createdFrom?: string;
+    createdTo?: string;
   }) => {
     const response = await api.get<ApiResponse<any>>("/api/admin/empresas", {
       params,
@@ -446,6 +452,15 @@ export const adminApi = {
     pageSize?: number;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
+    search?: string;
+    province?: string;
+    city?: string;
+    verified?: string;
+    hasCv?: string;
+    hasVideo?: string;
+    searchingFirstJob?: string;
+    createdFrom?: string;
+    createdTo?: string;
   }) => {
     const response = await api.get<ApiResponse<any>>("/api/admin/postulantes", {
       params,
@@ -478,6 +493,10 @@ export const adminApi = {
     status?: string;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
+    search?: string;
+    isRead?: string;
+    appliedFrom?: string;
+    appliedTo?: string;
   }) => {
     const response = await api.get<ApiResponse<any>>(
       "/api/admin/applications",

@@ -3,6 +3,15 @@ import { adminApi } from "../services/api";
 import DataTable from "../components/DataTable";
 import type { DataTableQuery } from "../components/DataTable";
 import Pagination from "../components/Pagination";
+import {
+  DateFilter,
+  FiltersPanel,
+  SearchFilter,
+  SelectFilter,
+  TextFilter,
+  YES_NO_OPTIONS,
+} from "../components/Filters";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { format } from "date-fns";
 import {
   getCachedData,
@@ -17,15 +26,48 @@ interface PostulantesCache {
   total: number;
 }
 
+interface PostulantesFilters {
+  search: string;
+  province: string;
+  city: string;
+  verified: string;
+  hasCv: string;
+  hasVideo: string;
+  searchingFirstJob: string;
+  createdFrom: string;
+  createdTo: string;
+}
+
+const EMPTY_FILTERS: PostulantesFilters = {
+  search: "",
+  province: "",
+  city: "",
+  verified: "",
+  hasCv: "",
+  hasVideo: "",
+  searchingFirstJob: "",
+  createdFrom: "",
+  createdTo: "",
+};
+
 function getCacheKeyForPage(
   page: number,
   pageSize: number,
-  sortBy?: string | null,
-  sortOrder?: "asc" | "desc" | null
+  sortBy: string | null | undefined,
+  sortOrder: "asc" | "desc" | null | undefined,
+  filters: PostulantesFilters
 ): string {
   const sortKey = sortBy || "none";
   const orderKey = sortOrder || "none";
-  return `postulantes_p${page}_ps${pageSize}_sb${sortKey}_so${orderKey}`;
+  const filtersKey = Object.entries(filters)
+    .filter(([, value]) => value.trim())
+    .map(([key, value]) => `${key}=${value.trim()}`)
+    .join("&");
+  return `postulantes_p${page}_ps${pageSize}_sb${sortKey}_so${orderKey}_f${filtersKey}`;
+}
+
+function toParam(value: string): string | undefined {
+  return value.trim() || undefined;
 }
 
 export default function PostulantesPage() {
@@ -39,7 +81,15 @@ export default function PostulantesPage() {
     sortBy: null,
     sortOrder: null,
   });
+  const [filters, setFilters] = useState<PostulantesFilters>(EMPTY_FILTERS);
+  const debouncedFilters = useDebouncedValue(filters);
+  const hasActiveFilters = Object.values(filters).some((value) => value.trim());
   const isMounted = useRef(true);
+
+  const updateFilter = (key: keyof PostulantesFilters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
 
   useEffect(() => {
     isMounted.current = true;
@@ -53,7 +103,8 @@ export default function PostulantesPage() {
       page,
       pageSize,
       tableQuery.sortBy,
-      tableQuery.sortOrder
+      tableQuery.sortOrder,
+      debouncedFilters
     );
     const cached = getCachedData<PostulantesCache>(cacheKey);
 
@@ -81,6 +132,15 @@ export default function PostulantesPage() {
         pageSize,
         sortBy: tableQuery.sortBy || undefined,
         sortOrder: tableQuery.sortOrder || undefined,
+        search: toParam(debouncedFilters.search),
+        province: toParam(debouncedFilters.province),
+        city: toParam(debouncedFilters.city),
+        verified: toParam(debouncedFilters.verified),
+        hasCv: toParam(debouncedFilters.hasCv),
+        hasVideo: toParam(debouncedFilters.hasVideo),
+        searchingFirstJob: toParam(debouncedFilters.searchingFirstJob),
+        createdFrom: toParam(debouncedFilters.createdFrom),
+        createdTo: toParam(debouncedFilters.createdTo),
       });
       if (!isMounted.current) return;
 
@@ -112,7 +172,7 @@ export default function PostulantesPage() {
         setRevalidating(false);
       }
     }
-  }, [page, pageSize, tableQuery.sortBy, tableQuery.sortOrder]);
+  }, [page, pageSize, tableQuery.sortBy, tableQuery.sortOrder, debouncedFilters]);
 
   useEffect(() => {
     loadPostulantes();
@@ -254,7 +314,71 @@ export default function PostulantesPage() {
             Actualizando...
           </span>
         )}
+        {!loading && (
+          <span className="text-sm text-gray-500">{total} resultados</span>
+        )}
       </div>
+
+      <FiltersPanel
+        hasActiveFilters={hasActiveFilters}
+        onClear={() => {
+          setFilters(EMPTY_FILTERS);
+          setPage(1);
+        }}
+      >
+        <SearchFilter
+          className="sm:col-span-2"
+          value={filters.search}
+          onChange={(value) => updateFilter("search", value)}
+          placeholder="Nombre, email, teléfono, DNI, título o skill"
+        />
+        <TextFilter
+          label="Provincia"
+          value={filters.province}
+          onChange={(value) => updateFilter("province", value)}
+          placeholder="Ej: Mendoza"
+        />
+        <TextFilter
+          label="Ciudad"
+          value={filters.city}
+          onChange={(value) => updateFilter("city", value)}
+          placeholder="Ej: Godoy Cruz"
+        />
+        <SelectFilter
+          label="Verificado"
+          value={filters.verified}
+          onChange={(value) => updateFilter("verified", value)}
+          options={YES_NO_OPTIONS}
+        />
+        <SelectFilter
+          label="Tiene CV"
+          value={filters.hasCv}
+          onChange={(value) => updateFilter("hasCv", value)}
+          options={YES_NO_OPTIONS}
+        />
+        <SelectFilter
+          label="Tiene video"
+          value={filters.hasVideo}
+          onChange={(value) => updateFilter("hasVideo", value)}
+          options={YES_NO_OPTIONS}
+        />
+        <SelectFilter
+          label="Busca primer empleo"
+          value={filters.searchingFirstJob}
+          onChange={(value) => updateFilter("searchingFirstJob", value)}
+          options={YES_NO_OPTIONS}
+        />
+        <DateFilter
+          label="Registrado desde"
+          value={filters.createdFrom}
+          onChange={(value) => updateFilter("createdFrom", value)}
+        />
+        <DateFilter
+          label="Registrado hasta"
+          value={filters.createdTo}
+          onChange={(value) => updateFilter("createdTo", value)}
+        />
+      </FiltersPanel>
 
       <DataTable
         data={postulantes}
