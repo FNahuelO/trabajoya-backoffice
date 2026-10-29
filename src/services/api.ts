@@ -1,5 +1,10 @@
 import axios from "axios";
-import type { ApiResponse } from "../types";
+import type {
+  ApiResponse,
+  ModerationAnalysis,
+  ModerationTerm,
+  ModerationTermCategory,
+} from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
@@ -404,6 +409,49 @@ export const moderationApi = {
   getJobDetails: async (id: string) => {
     const response = await api.get<ApiResponse<any>>(
       `/api/moderation/jobs/${id}`
+    );
+    return response.data;
+  },
+  listTerms: async () => {
+    const response = await api.get<ApiResponse<ModerationTerm[]>>(
+      "/api/moderation/terms"
+    );
+    return response.data;
+  },
+  createTerm: async (data: {
+    term: string;
+    category: ModerationTermCategory;
+  }) => {
+    const response = await api.post<ApiResponse<ModerationTerm>>(
+      "/api/moderation/terms",
+      data
+    );
+    return response.data;
+  },
+  updateTerm: async (
+    id: string,
+    data: Partial<Pick<ModerationTerm, "term" | "category" | "active">>
+  ) => {
+    const response = await api.patch<ApiResponse<ModerationTerm>>(
+      `/api/moderation/terms/${id}`,
+      data
+    );
+    return response.data;
+  },
+  deleteTerm: async (id: string) => {
+    const response = await api.delete<ApiResponse<any>>(
+      `/api/moderation/terms/${id}`
+    );
+    return response.data;
+  },
+  testContent: async (data: {
+    title: string;
+    description: string;
+    requirements: string;
+  }) => {
+    const response = await api.post<ApiResponse<ModerationAnalysis>>(
+      "/api/moderation/terms/test",
+      data
     );
     return response.data;
   },

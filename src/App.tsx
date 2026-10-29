@@ -25,6 +25,7 @@ import RolesPage from "./pages/RolesPage";
 import InternalUsersPage from "./pages/InternalUsersPage";
 import NotificationCampaignsPage from "./pages/NotificationCampaignsPage";
 import SettingsPage from "./pages/SettingsPage";
+import ModerationTermsPage from "./pages/ModerationTermsPage";
 
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
@@ -66,6 +67,7 @@ function AppRoutes() {
                 <Route path="/catalogs" element={<CatalogsPage />} />
                 <Route path="/plans" element={<PlansPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/moderation-terms" element={<ModerationTermsPage />} />
                 <Route path="/promotions" element={<PromotionsPage />} />
                 <Route
                   path="/notification-campaigns"

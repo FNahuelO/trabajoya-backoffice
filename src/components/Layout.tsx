@@ -22,6 +22,7 @@ import {
   UserCog,
   Bell,
   Settings,
+  ShieldAlert,
 } from "lucide-react";
 
 interface LayoutProps {
@@ -43,6 +44,7 @@ const menuItems = [
   { path: "/catalogs", icon: BookOpen, label: "Catálogos y Opciones" },
   { path: "/plans", icon: Package, label: "Planes" },
   { path: "/reports", icon: Flag, label: "Denuncias" },
+  { path: "/moderation-terms", icon: ShieldAlert, label: "Filtro de avisos" },
   { path: "/internal-users", icon: UserCog, label: "Usuarios Internos", separator: true },
   { path: "/roles", icon: Shield, label: "Roles" },
   { path: "/settings", icon: Settings, label: "Configuración" },

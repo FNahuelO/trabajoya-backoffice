@@ -473,3 +473,27 @@ export interface IapProduct {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ModerationTermCategory =
+  | "SCAM"
+  | "EXPLOITATION"
+  | "DISCRIMINATION"
+  | "OFFENSIVE"
+  | "INAPPROPRIATE";
+
+export interface ModerationTerm {
+  id: string;
+  term: string;
+  category: ModerationTermCategory;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ModerationAnalysis {
+  isApproved: boolean;
+  score: number;
+  reasons: string[];
+  flaggedWords: string[];
+  suggestions?: string[];
+}
